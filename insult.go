@@ -174,7 +174,3 @@ func Generate() string {
 	r3 := rand.Intn(len(column3))
 	return fmt.Sprintf("%s %s %s %s", thou, column1[r1], column2[r2], column3[r3])
 }
-
-func main() {
-	fmt.Println(Generate())
-}
