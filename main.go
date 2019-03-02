@@ -22,5 +22,16 @@ func main() {
 		c.String(200, "%s", Generate())
 	})
 
+	// https://api.slack.com/slash-commands
+	r.POST("/insult", func(c *gin.Context) {
+		// read body as JSON
+		// check the text for the user id
+
+		c.JSON(200, gin.H{
+			"text":          Generate(),
+			"response_type": "in_channel",
+		})
+	})
+
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
