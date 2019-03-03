@@ -12,21 +12,22 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/", func(c *gin.Context) {
+		c.String(200, "%s", "Hello World!")
+	})
+
+	r.GET("/api/v1/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
 
-	r.GET("/insult", func(c *gin.Context) {
+	r.GET("/api/v1/knave/insult", func(c *gin.Context) {
 		c.String(200, "%s", Generate())
 	})
 
 	// https://api.slack.com/slash-commands
-	r.POST("/insult", func(c *gin.Context) {
-		// read body as JSON
-		// check the text for the user id
-
+	r.POST("/api/v1/knave/insult", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"text":          Generate(),
 			"response_type": "in_channel",
