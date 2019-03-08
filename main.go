@@ -12,16 +12,6 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.String(200, "%s", "Hello World!")
-	})
-
-	r.GET("/api/v1/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
 	r.GET("/api/v1/knave/insult", func(c *gin.Context) {
 		c.String(200, "%s", Generate())
 	})
