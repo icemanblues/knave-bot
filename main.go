@@ -24,17 +24,5 @@ func main() {
 		})
 	})
 
-	// OLD GET AND POST
-	// These are only here until the cutover is complete
-	r.GET("/api/v1/knave/insult", func(c *gin.Context) {
-		c.String(200, "%s", Generate())
-	})
-	r.POST("/api/v1/knave/insult", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"text":          Generate(),
-			"response_type": "in_channel",
-		})
-	})
-
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
