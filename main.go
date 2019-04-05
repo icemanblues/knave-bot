@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,6 +12,8 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+
+	r.Use(cors.Default())
 
 	r.GET("/knavebot/v1/insult", func(c *gin.Context) {
 		c.String(200, "%s", Generate())
