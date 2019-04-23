@@ -8,7 +8,7 @@ import (
 
 const thou = "Thou"
 
-var column1 = []string{
+var insultA = []string{
 	"artless",
 	"bawdy",
 	"beslubbering",
@@ -61,7 +61,7 @@ var column1 = []string{
 	"yeasty",
 }
 
-var column2 = []string{
+var insultB = []string{
 	"base-court",
 	"bat-fowling",
 	"beef-witted",
@@ -114,7 +114,7 @@ var column2 = []string{
 	"weather-bitten",
 }
 
-var column3 = []string{
+var insultC = []string{
 	"apple-john",
 	"baggage",
 	"barnacle",
@@ -167,10 +167,11 @@ var column3 = []string{
 	"wagtail",
 }
 
-func Generate() string {
+// Insult randomly generates a Shakespearean Insult
+func Insult() string {
 	rand.Seed(time.Now().Unix())
-	r1 := rand.Intn(len(column1))
-	r2 := rand.Intn(len(column2))
-	r3 := rand.Intn(len(column3))
-	return fmt.Sprintf("%s %s %s %s", thou, column1[r1], column2[r2], column3[r3])
+	r1 := rand.Intn(len(insultA))
+	r2 := rand.Intn(len(insultB))
+	r3 := rand.Intn(len(insultC))
+	return fmt.Sprintf("%s %s %s %s", thou, insultA[r1], insultB[r2], insultC[r3])
 }

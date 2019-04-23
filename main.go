@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	fmt.Println(Generate())
+	fmt.Println(Insult())
+	fmt.Println(Compliment())
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -16,13 +17,17 @@ func main() {
 	r.Use(cors.Default())
 
 	r.GET("/knavebot/v1/insult", func(c *gin.Context) {
-		c.String(200, "%s", Generate())
+		c.String(200, "%s", Insult())
+	})
+
+	r.GET("/knavebot/v1/compliment", func(c *gin.Context) {
+		c.String(200, "%s", Compliment())
 	})
 
 	// https://api.slack.com/slash-commands
 	r.POST("/knavebot/v1/insult", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"text":          Generate(),
+			"text":          Insult(),
 			"response_type": "in_channel",
 		})
 	})
