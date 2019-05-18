@@ -7,10 +7,13 @@ RUN apk add --update --no-cache ca-certificates git gcc musl-dev
 # Fetch dependencies
 RUN mkdir /build 
 WORKDIR /build 
-COPY . .
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
+
 # build the go binary
-RUN CGO_ENABLED=1 GOOS=linux go build --tags "linux" -a -ldflags '-extldflags "-static"' -o knavebot main/main
+COPY main .
+RUN CGO_ENABLED=1 GOOS=linux go build --tags "linux" -a -ldflags '-extldflags "-static"' -o knavebot main
 
 # Run the binary in its own scratch container
 FROM scratch
