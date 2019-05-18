@@ -1,22 +1,19 @@
 FROM golang:alpine as builder
 
 # Install git # Git is required for fetching the dependencies
-RUN apk update && apk add --no-cache git
+# gcc is required for sqlite
+RUN apk add --update --no-cache ca-certificates git gcc musl-dev
 
-# Fetch dependencies # Using go get
-# not using modules nor a vendoring system yet
-WORKDIR $GOPATH/src/github.com/icemanblues/knave-bot
-COPY . .
-RUN go get -d -v
-
-# build the go binary
+# Fetch dependencies
 RUN mkdir /build 
-ADD . /build/
 WORKDIR /build 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o main .
+COPY . .
+RUN go mod download
+# build the go binary
+RUN CGO_ENABLED=1 GOOS=linux go build --tags "linux" -a -ldflags '-extldflags "-static"' -o knavebot main/main
 
 # Run the binary in its own scratch container
 FROM scratch
-COPY --from=builder /build/main /app/
+COPY --from=builder /build/knavebot /app/
 WORKDIR /app
-CMD ["./main"]
+CMD ["./knavebot"]
