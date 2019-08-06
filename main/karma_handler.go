@@ -10,6 +10,7 @@ type KarmaHandler interface {
 	GetKarma(c *gin.Context)
 	AddKarma(c *gin.Context)
 	DelKarma(c *gin.Context)
+	SlashKarma(c *gin.Context)
 }
 
 type LiteKarmaHandler struct {
@@ -47,6 +48,13 @@ func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 	k := lkh.kdb.DeleteKarma(team, user)
 
 	c.String(200, "%v", k)
+}
+
+func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"text":          "Hello, you have reached Karma bot",
+		"response_type": "in_channel",
+	})
 }
 
 func NewKarmaHandler(kdb KarmaDB) *LiteKarmaHandler {

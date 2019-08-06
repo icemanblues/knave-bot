@@ -30,18 +30,21 @@ func main() {
 	r.Use(cors.Default())
 
 	// bind handlers to router
-	// https://api.slack.com/slash-commands
 
+	// knave compliment and insult
 	r.GET("/knavebot/v1/insult", knave.Insult)
 	r.GET("/knavebot/v1/compliment", knave.Compliment)
-
-	// knave
-	r.POST("/knavebot/v1/insult", knave.SlashKnave)
 
 	// karma
 	r.GET("/karmabot/v1/:team/:user", karma.GetKarma)
 	r.PUT("/karmabot/v1/:team/:user", karma.AddKarma)
 	r.DELETE("/karmabot/v1/:team/:user", karma.DelKarma)
+
+	// slack slash command integration
+	r.POST("/knavebot/v1/cmd/knave", knave.SlashKnave)
+	r.POST("knavebot/v1/cmd/karma", karma.SlashKarma)
+	// backwards compatibility knave
+	r.POST("/knavebot/v1/insult", knave.SlashKnave)
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
