@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	fmt.Println(Insult())
-	fmt.Println(Compliment())
+	fmt.Printf("Insult: %v\n", Insult())
+	fmt.Printf("Compliment: %v\n", Compliment())
 
 	// initialize database
 	db, err := InitDB()
@@ -30,12 +30,18 @@ func main() {
 	r.Use(cors.Default())
 
 	// bind handlers to router
+	// https://api.slack.com/slash-commands
+
 	r.GET("/knavebot/v1/insult", knave.Insult)
 	r.GET("/knavebot/v1/compliment", knave.Compliment)
-	// https://api.slack.com/slash-commands
+
+	// knave
 	r.POST("/knavebot/v1/insult", knave.SlashKnave)
 
+	// karma
 	r.GET("/karmabot/v1/:team/:user", karma.GetKarma)
+	r.PUT("/karmabot/v1/:team/:user", karma.AddKarma)
+	r.DELETE("/karmabot/v1/:team/:user", karma.DelKarma)
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
