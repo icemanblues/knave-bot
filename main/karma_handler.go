@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -51,10 +52,19 @@ func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 }
 
 func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"text":          "Hello, you have reached Karma bot",
-		"response_type": "in_channel",
-	})
+	data := &CommandData{
+		Command:      c.PostForm("command"),
+		Text:         c.PostForm("text"),
+		ResponseURL:  c.PostForm("response_url"),
+		EnterpriseID: c.PostForm("enterprise_id"),
+		TeamID:       c.PostForm("team_id"),
+		ChannelID:    c.PostForm("channel_id"),
+		UserID:       c.PostForm("user_id"),
+	}
+	fmt.Printf("Command Data: %+v\n", data)
+
+	response := ErrorResponse("Hello, this is a work-in-progress. Ask roland for more details")
+	c.JSON(200, response)
 }
 
 func NewKarmaHandler(kdb KarmaDB) *LiteKarmaHandler {

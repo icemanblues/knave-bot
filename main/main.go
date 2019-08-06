@@ -42,7 +42,7 @@ func main() {
 
 	// slack slash command integration
 	r.POST("/knavebot/v1/cmd/knave", knave.SlashKnave)
-	r.POST("knavebot/v1/cmd/karma", karma.SlashKarma)
+	r.POST("/knavebot/v1/cmd/karma", karma.SlashKarma)
 	// backwards compatibility knave
 	r.POST("/knavebot/v1/insult", knave.SlashKnave)
 
