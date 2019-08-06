@@ -32,10 +32,11 @@ give that karma to everyone involved? Or distribute it around (rounding?)
 
 Commands
 
+* `/karma ++ @user`
+* `/karma -- @user`
 * `/karma me`
 * `/karma top`
 * `/karma bot` or `/karma bottom`
-* `/karma @user`
 * `/karma help`
 
 ## Karma Interactions Tractions

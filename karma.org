@@ -1,3 +1,7 @@
+* Karma DB is in the container
+Move it outside of the container, using mount
+See how mysql is handled
+
 * Update Slash Command on Slack
 ** Short Description
 exactly what it sounds like, a short description of what your command does.
@@ -11,8 +15,12 @@ so make sure you're keeping this hint brief enough not to get truncated.
 * Slack Integration
 ** Currently responding immediately
 Should do something useful in response later
+** Signing Secrets
+
 
 * App Code Cleanliness
 ** DB SQL can be better written
 ** Golang can make use of packages
 ** Godoc comments
+** Tests
+
