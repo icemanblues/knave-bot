@@ -1,0 +1,18 @@
+* Update Slash Command on Slack
+** Short Description
+exactly what it sounds like, a short description of what your command does.
+** Usage Hint
+displayed to users when they try to invoke the command, 
+so if you have any parameters that can be used with your command, 
+we recommend showing them here. 
+You'll see a preview of the autocomplete entry where this hint is displayed, 
+so make sure you're keeping this hint brief enough not to get truncated.
+
+* Slack Integration
+** Currently responding immediately
+Should do something useful in response later
+
+* App Code Cleanliness
+** DB SQL can be better written
+** Golang can make use of packages
+** Godoc comments
