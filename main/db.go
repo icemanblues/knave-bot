@@ -9,12 +9,13 @@ import (
 
 func createDB() (*sql.DB, error) {
 	// create the directories required for the database file
-	err := os.MkdirAll("var/sqlite", os.ModeDir|0755)
+	// TODO: Probably should parameterize this to be environment (LOCAL, PROD) friendly
+	err := os.MkdirAll("/var/sqlite", os.ModeDir|0755)
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite3", "var/sqlite/karma.db")
+	db, err := sql.Open("sqlite3", "/var/lib/sqlite/karma.db")
 	if err != nil {
 		return nil, err
 	}
