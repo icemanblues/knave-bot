@@ -2,15 +2,14 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
 // KarmaDB DAO for the Karma database
 type KarmaDB interface {
-	GetKarma(team, user string) int
-	UpdateKarma(team, user string, delta int) int
-	DeleteKarma(team, user string) int
+	GetKarma(team, user string) (int, error)
+	UpdateKarma(team, user string, delta int) (int, error)
+	DeleteKarma(team, user string) (int, error)
 }
 
 // LiteKarmaDB a SQLite imlpementation of the Karma database
@@ -19,7 +18,7 @@ type LiteKarmaDB struct {
 }
 
 // GetKarma returns the karma value for the user in a given team
-func (kdb *LiteKarmaDB) GetKarma(team, user string) int {
+func (kdb *LiteKarmaDB) GetKarma(team, user string) (int, error) {
 	row := kdb.db.QueryRow(`
 		SELECT k.karma
 		FROM   karma k
@@ -30,19 +29,23 @@ func (kdb *LiteKarmaDB) GetKarma(team, user string) int {
 	var k int
 	err := row.Scan(&k)
 	if err != nil {
-		fmt.Printf("WARN: Didn't find the user %v in team %v. Defaulting to %v error: %v\n", user, team, k, err)
+		return 0, err
 	}
 
-	return k
+	return k, nil
 }
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
-func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) int {
+func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) (int, error) {
 	// TODO: UpSert the current value plus delta. If no current value, assume 0
 	// currently we do a SELECT to determine if we need to do an insert or update
 	// in the future, we will combine this into a proper UpSert
 	// and use the returning syntax to make it atomic
-	k := kdb.GetKarma(workspace, user)
+	k, err := kdb.GetKarma(workspace, user)
+	if err != nil {
+		return 0, err
+	}
+
 	if k == 0 {
 		// insert
 		_, err := kdb.db.Exec(`
@@ -52,14 +55,13 @@ func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) int {
 			(?, ?, ?, ?, ?)
 		`, workspace, user, delta, time.Now(), time.Now())
 		if err != nil {
-			fmt.Printf("ERROR: Unable to insert a new value to the karma %v %v. err %v\n", workspace, user, err)
-			return 0
+			return k, err
 		}
-		return delta
+		return delta, nil
 	}
 
 	// update
-	_, err := kdb.db.Exec(`
+	_, err = kdb.db.Exec(`
 		UPDATE karma
 		SET	karma = karma + ?,
 			updated_at = ?
@@ -67,24 +69,24 @@ func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) int {
 		AND	   user = ? 
 	`, delta, time.Now(), workspace, user)
 	if err != nil {
-		fmt.Printf("ERROR: Unable to update karma. delta %v workspace %v user %v. err %v\n", delta, workspace, user, err)
-		return k
+		return k, nil
 	}
+
 	return kdb.GetKarma(workspace, user)
 }
 
 // DeleteKarma resets all karma for a given user in a given team to zer0
-func (kdb *LiteKarmaDB) DeleteKarma(team, user string) int {
+func (kdb *LiteKarmaDB) DeleteKarma(team, user string) (int, error) {
 	_, err := kdb.db.Exec(`
 		DELETE FROM karma
 		WHERE  team = ?
 		AND	   user = ? 
 	`, team, user)
 	if err != nil {
-		fmt.Printf("ERROR: Unable to delete karma for team %v user %v. err %v\n", team, user, err)
+		return 0, err
 	}
 
-	return 0
+	return 0, nil
 }
 
 // NewKdb factory method

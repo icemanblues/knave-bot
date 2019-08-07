@@ -104,11 +104,19 @@ func (kp KdbProcessor) help() (*Response, error) {
 }
 
 func (kp KdbProcessor) me(team, userID string) (*Response, error) {
-	k := kp.kdb.GetKarma(team, userID)
+	k, err := kp.kdb.GetKarma(team, userID)
+	if err != nil {
+		return nil, err
+	}
+
 	return kp.karmaStatus(userID, k)
 }
 
 func (kp KdbProcessor) delta(team, userID string, delta int) (*Response, error) {
-	k := kp.kdb.UpdateKarma(team, userID, delta)
+	k, err := kp.kdb.UpdateKarma(team, userID, delta)
+	if err != nil {
+		return nil, err
+	}
+
 	return kp.karmaStatus(userID, k)
 }

@@ -25,7 +25,11 @@ func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
-	k := lkh.kdb.GetKarma(team, user)
+	k, err := lkh.kdb.GetKarma(team, user)
+	if err != nil {
+		c.Error(err)
+		c.String(500, "I'm sorry, we are not able to do that right now")
+	}
 
 	c.String(200, "%v", k)
 }
@@ -39,10 +43,14 @@ func (lkh *LiteKarmaHandler) AddKarma(c *gin.Context) {
 	delta, err := strconv.Atoi(d)
 	if err != nil {
 		c.String(400, "Please pass a valid integer. %v", d)
+		return
 	}
 
-	k := lkh.kdb.UpdateKarma(team, user, delta)
-
+	k, err := lkh.kdb.UpdateKarma(team, user, delta)
+	if err != nil {
+		c.Error(err)
+		c.String(500, "I'm sorry, we are not able to do that right now")
+	}
 	c.String(200, "%v", k)
 }
 
@@ -51,7 +59,11 @@ func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
-	k := lkh.kdb.DeleteKarma(team, user)
+	k, err := lkh.kdb.DeleteKarma(team, user)
+	if err != nil {
+		c.Error(err)
+		c.String(500, "I'm sorry, we are not able to do that right now")
+	}
 
 	c.String(200, "%v", k)
 }
@@ -70,6 +82,7 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 
 	response, err := lkh.kProc.Process(data)
 	if err != nil {
+		c.Error(err)
 		response = ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 	}
 
