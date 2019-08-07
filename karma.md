@@ -32,12 +32,12 @@ give that karma to everyone involved? Or distribute it around (rounding?)
 
 Commands
 
+* `/karma help`
+* `/karma me`
 * `/karma ++ @user`
 * `/karma -- @user`
-* `/karma me`
 * `/karma top`
 * `/karma bot` or `/karma bottom`
-* `/karma help`
 
 ## Karma Interactions Tractions
 
@@ -113,3 +113,7 @@ returns n users and their karma totals, in order.
 GET `/karma/report`
 
 * lots of query params
+
+## Future
+
+* a cooldown/ rate limiter on giving someone too much karma too quickly?

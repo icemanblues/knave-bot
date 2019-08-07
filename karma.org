@@ -20,7 +20,8 @@ Should do something useful in response later
 
 * App Code Cleanliness
 ** DB SQL can be better written
-** Golang can make use of packages
+** DAO should return errors
+** refactor into Golang packages
 ** Godoc comments
 ** Tests
-
+** Logging
