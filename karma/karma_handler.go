@@ -1,27 +1,28 @@
-package main
+package karma
 
 import (
+	"main/slack"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-// KarmaHandler interface for Karma handler
-type KarmaHandler interface {
+// Handler interface for Karma handler
+type Handler interface {
 	GetKarma(c *gin.Context)
 	AddKarma(c *gin.Context)
 	DelKarma(c *gin.Context)
 	SlashKarma(c *gin.Context)
 }
 
-// LiteKarmaHandler Karma Handler implementation using sqlite
-type LiteKarmaHandler struct {
-	kProc KarmaProcessor
-	kdb   KarmaDB
+// SQLiteHandler Karma Handler implementation using sqlite
+type SQLiteHandler struct {
+	kProc Processor
+	kdb   DAO
 }
 
 // GetKarma handler method to read the current karma for an individual
-func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
+func (lkh *SQLiteHandler) GetKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -35,7 +36,7 @@ func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
 }
 
 // AddKarma handler method to add (or subtract) karma from an individual
-func (lkh *LiteKarmaHandler) AddKarma(c *gin.Context) {
+func (lkh *SQLiteHandler) AddKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -55,7 +56,7 @@ func (lkh *LiteKarmaHandler) AddKarma(c *gin.Context) {
 }
 
 // DelKarma handler method to delete (reset) karma to zer0
-func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
+func (lkh *SQLiteHandler) DelKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -69,8 +70,8 @@ func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 }
 
 // SlashKarma handler method for the `/karma` slash-command
-func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
-	data := &CommandData{
+func (lkh *SQLiteHandler) SlashKarma(c *gin.Context) {
+	data := &slack.CommandData{
 		Command:      c.PostForm("command"),
 		Text:         c.PostForm("text"),
 		ResponseURL:  c.PostForm("response_url"),
@@ -83,15 +84,15 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 	response, err := lkh.kProc.Process(data)
 	if err != nil {
 		c.Error(err)
-		response = ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
+		response = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 	}
 
 	c.JSON(200, response)
 }
 
-// NewKarmaHandler factory method
-func NewKarmaHandler(kProc KarmaProcessor, kdb KarmaDB) *LiteKarmaHandler {
-	return &LiteKarmaHandler{
+// NewHandler factory method
+func NewHandler(kProc Processor, kdb DAO) *SQLiteHandler {
+	return &SQLiteHandler{
 		kProc: kProc,
 		kdb:   kdb,
 	}

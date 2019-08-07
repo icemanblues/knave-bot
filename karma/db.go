@@ -1,16 +1,16 @@
-package main
+package karma
 
 import (
 	"database/sql"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // sqlite db driver
 )
 
 func createDB() (*sql.DB, error) {
 	// create the directories required for the database file
 	// TODO: Probably should parameterize this to be environment (LOCAL, PROD) friendly
-	err := os.MkdirAll("/var/sqlite", os.ModeDir|0755)
+	err := os.MkdirAll("/var/lib/sqlite", os.ModeDir|0755)
 	if err != nil {
 		return nil, err
 	}

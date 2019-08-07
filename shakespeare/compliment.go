@@ -1,4 +1,4 @@
-package main
+package shakespeare
 
 import (
 	"fmt"
@@ -50,5 +50,5 @@ func Compliment() string {
 	r1 := rand.Intn(len(complimentA))
 	r2 := rand.Intn(len(complimentB))
 	r3 := rand.Intn(len(complimentC))
-	return fmt.Sprintf("%s %s %s %s", thou, complimentA[r1], complimentB[r2], complimentC[r3])
+	return fmt.Sprintf("%s %s %s %s", Thou, complimentA[r1], complimentB[r2], complimentC[r3])
 }

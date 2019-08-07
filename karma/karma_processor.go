@@ -1,6 +1,7 @@
-package main
+package karma
 
 import (
+	"main/slack"
 	"strconv"
 	"strings"
 )
@@ -13,23 +14,23 @@ func Abs(x int) int {
 	return x
 }
 
-// KarmaProcessor processes slash-commands into slack responses
-type KarmaProcessor interface {
-	Process(cd *CommandData) (*Response, error)
+// Processor processes slash-commands into slack responses
+type Processor interface {
+	Process(cd *slack.CommandData) (*slack.Response, error)
 }
 
-// KdbProcessor an implementation of KarmaProcessor that uses SQLite
-type KdbProcessor struct {
-	kdb KarmaDB
+// SQLiteProcessor an implementation of KarmaProcessor that uses SQLite
+type SQLiteProcessor struct {
+	kdb DAO
 }
 
-// NewKdbProcessor factory method
-func NewKdbProcessor(kdb KarmaDB) *KdbProcessor {
-	return &KdbProcessor{kdb}
+// NewProcessor factory method
+func NewProcessor(kdb DAO) *SQLiteProcessor {
+	return &SQLiteProcessor{kdb}
 }
 
 // Process handles Karma processing from slack API
-func (kp KdbProcessor) Process(c *CommandData) (*Response, error) {
+func (kp SQLiteProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	if len(c.Text) == 0 {
 		return kp.help()
 	}
@@ -48,29 +49,29 @@ func (kp KdbProcessor) Process(c *CommandData) (*Response, error) {
 
 	case "status":
 		if len(words) == 1 {
-			return ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
+			return slack.ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
 		}
 
 		target := words[1]
-		t, ok := IsSlackUser(target)
+		t, ok := slack.IsSlackUser(target)
 		if !ok {
-			return ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
+			return slack.ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
 		}
 		return kp.me(c.TeamID, t)
 
 	case "++":
 		if len(words) == 1 {
-			return ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
+			return slack.ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
 		}
 
 		target := words[1]
-		t, ok := IsSlackUser(target)
+		t, ok := slack.IsSlackUser(target)
 		if !ok {
-			return ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
+			return slack.ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
 		}
 
 		if t == c.UserID {
-			return ErrorResponse("Don't be a weasel. For Shame!"), nil
+			return slack.ErrorResponse("Don't be a weasel. For Shame!"), nil
 		}
 
 		// optional: see if next parameter is an amount, if so, use it
@@ -83,7 +84,7 @@ func (kp KdbProcessor) Process(c *CommandData) (*Response, error) {
 		}
 
 		if delta == 0 {
-			return ErrorResponse("Don't waste my time. For shame!"), nil
+			return slack.ErrorResponse("Don't waste my time. For shame!"), nil
 		}
 
 		return kp.delta(c.TeamID, t, delta)
@@ -93,8 +94,8 @@ func (kp KdbProcessor) Process(c *CommandData) (*Response, error) {
 	}
 }
 
-func (kp KdbProcessor) help() (*Response, error) {
-	return ErrorResponse(`
+func (kp SQLiteProcessor) help() (*slack.Response, error) {
+	return slack.ErrorResponse(`
 	*Help* This will provide you with additional information on how to work with Karma.
 	* _me_ This will return your current karma.
 	* _status_ Provide a user, and it will return their current karma
@@ -103,7 +104,7 @@ func (kp KdbProcessor) help() (*Response, error) {
 	`), nil
 }
 
-func (kp KdbProcessor) me(team, userID string) (*Response, error) {
+func (kp SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
 	k, err := kp.kdb.GetKarma(team, userID)
 	if err != nil {
 		return nil, err
@@ -112,7 +113,7 @@ func (kp KdbProcessor) me(team, userID string) (*Response, error) {
 	return kp.karmaStatus(userID, k)
 }
 
-func (kp KdbProcessor) delta(team, userID string, delta int) (*Response, error) {
+func (kp SQLiteProcessor) delta(team, userID string, delta int) (*slack.Response, error) {
 	k, err := kp.kdb.UpdateKarma(team, userID, delta)
 	if err != nil {
 		return nil, err

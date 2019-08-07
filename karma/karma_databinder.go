@@ -1,24 +1,24 @@
-package main
+package karma
 
 import (
 	"database/sql"
 	"time"
 )
 
-// KarmaDB DAO for the Karma database
-type KarmaDB interface {
+// DAO DAO for the Karma database
+type DAO interface {
 	GetKarma(team, user string) (int, error)
 	UpdateKarma(team, user string, delta int) (int, error)
 	DeleteKarma(team, user string) (int, error)
 }
 
-// LiteKarmaDB a SQLite imlpementation of the Karma database
-type LiteKarmaDB struct {
+// SQLiteDAO a SQLite imlpementation of the Karma database
+type SQLiteDAO struct {
 	db *sql.DB
 }
 
 // GetKarma returns the karma value for the user in a given team
-func (kdb *LiteKarmaDB) GetKarma(team, user string) (int, error) {
+func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 	row := kdb.db.QueryRow(`
 		SELECT k.karma
 		FROM   karma k
@@ -36,7 +36,7 @@ func (kdb *LiteKarmaDB) GetKarma(team, user string) (int, error) {
 }
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
-func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) (int, error) {
+func (kdb *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
 	// TODO: UpSert the current value plus delta. If no current value, assume 0
 	// currently we do a SELECT to determine if we need to do an insert or update
 	// in the future, we will combine this into a proper UpSert
@@ -76,7 +76,7 @@ func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) (int, err
 }
 
 // DeleteKarma resets all karma for a given user in a given team to zer0
-func (kdb *LiteKarmaDB) DeleteKarma(team, user string) (int, error) {
+func (kdb *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
 	_, err := kdb.db.Exec(`
 		DELETE FROM karma
 		WHERE  team = ?
@@ -90,6 +90,6 @@ func (kdb *LiteKarmaDB) DeleteKarma(team, user string) (int, error) {
 }
 
 // NewKdb factory method
-func NewKdb(db *sql.DB) *LiteKarmaDB {
-	return &LiteKarmaDB{db}
+func NewKdb(db *sql.DB) *SQLiteDAO {
+	return &SQLiteDAO{db}
 }

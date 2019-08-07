@@ -2,30 +2,34 @@ package main
 
 import (
 	"fmt"
+	"main/karma"
+	"main/knave"
+	"main/shakespeare"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	fmt.Printf("Insult: %v\n", Insult())
-	fmt.Printf("Compliment: %v\n", Compliment())
+	// TODO: Move these to log lines
+	fmt.Printf("Insult: %v\n", shakespeare.Insult())
+	fmt.Printf("Compliment: %v\n", shakespeare.Compliment())
 
 	// initialize database
-	db, err := InitDB()
+	db, err := karma.InitDB()
 	if err != nil {
 		panic(err)
 	}
 
 	// create databinders
-	kdb := NewKdb(db)
+	kdb := karma.NewKdb(db)
 
 	// create processors
-	karmaProc := NewKdbProcessor(kdb)
+	karmaProc := karma.NewProcessor(kdb)
 
 	// create handlers
-	knave := NewKnaveHandler()
-	karma := NewKarmaHandler(karmaProc, kdb)
+	knave := knave.NewHandler()
+	karma := karma.NewHandler(karmaProc, kdb)
 
 	// create gin router
 	gin.SetMode(gin.ReleaseMode)

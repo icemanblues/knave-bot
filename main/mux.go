@@ -1,9 +1,14 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"main/karma"
+	"main/knave"
+
+	"github.com/gin-gonic/gin"
+)
 
 // BindRoutes bind handlers to router
-func BindRoutes(r *gin.Engine, knave KnaveHandler, karma KarmaHandler) {
+func BindRoutes(r *gin.Engine, knave knave.Handler, karma karma.Handler) {
 	// knave compliment and insult
 	r.GET("/knavebot/v1/insult", knave.Insult)
 	r.GET("/knavebot/v1/compliment", knave.Compliment)

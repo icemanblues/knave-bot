@@ -1,4 +1,4 @@
-package main
+package shakespeare
 
 import (
 	"fmt"
@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-const thou = "Thou"
+// Thou .
+const Thou = "Thou"
 
 var insultA = []string{
 	"artless",
@@ -173,5 +174,5 @@ func Insult() string {
 	r1 := rand.Intn(len(insultA))
 	r2 := rand.Intn(len(insultB))
 	r3 := rand.Intn(len(insultC))
-	return fmt.Sprintf("%s %s %s %s", thou, insultA[r1], insultB[r2], insultC[r3])
+	return fmt.Sprintf("%s %s %s %s", Thou, insultA[r1], insultB[r2], insultC[r3])
 }
