@@ -1,11 +1,13 @@
-* Karma DB is in the container
+* DONE Karma DB is in the container
 Move it outside of the container, using mount
 See how mysql is handled
 
+* Better messaging
+
 * Update Slash Command on Slack
-** Short Description
+** TODO Short Description
 exactly what it sounds like, a short description of what your command does.
-** Usage Hint
+** TODO Usage Hint
 displayed to users when they try to invoke the command, 
 so if you have any parameters that can be used with your command, 
 we recommend showing them here. 
@@ -13,15 +15,20 @@ You'll see a preview of the autocomplete entry where this hint is displayed,
 so make sure you're keeping this hint brief enough not to get truncated.
 
 * Slack Integration
-** Currently responding immediately
+** TODO Currently responding immediately
 Should do something useful in response later
-** Signing Secrets
+** TODO Signing Secrets
 
 
 * App Code Cleanliness
-** DB SQL can be better written
-** DAO should return errors
-** refactor into Golang packages
-** Godoc comments
-** Tests
-** Logging
+** TODO DB SQL can be better written
+https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
+
+** DONE DAO should return errors
+** TODO refactor into Golang packages
+** DONE Godoc comments
+** TODO Tests
+** TODO Logging
+** TODO environment configurations
+Use a json file and a config struct
+
