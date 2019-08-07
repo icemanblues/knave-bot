@@ -15,7 +15,8 @@ type KarmaHandler interface {
 }
 
 type LiteKarmaHandler struct {
-	kdb KarmaDB
+	kProc KarmaProcessor
+	kdb   KarmaDB
 }
 
 func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
@@ -63,10 +64,16 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 	}
 	fmt.Printf("Command Data: %+v\n", data)
 
-	response := ErrorResponse("Hello, this is a work-in-progress. Ask roland for more details")
+	response, err := lkh.kProc.Process(data)
+	if err != nil {
+		response = ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
+	}
 	c.JSON(200, response)
 }
 
-func NewKarmaHandler(kdb KarmaDB) *LiteKarmaHandler {
-	return &LiteKarmaHandler{kdb}
+func NewKarmaHandler(kProc KarmaProcessor, kdb KarmaDB) *LiteKarmaHandler {
+	return &LiteKarmaHandler{
+		kProc: kProc,
+		kdb:   kdb,
+	}
 }

@@ -20,31 +20,21 @@ func main() {
 	// create databinders
 	kdb := NewKdb(db)
 
+	// create processors
+	karmaProc := NewKdbProcessor(kdb)
+
 	// create handlers
 	knave := NewKnaveHandler()
-	karma := NewKarmaHandler(kdb)
+	karma := NewKarmaHandler(karmaProc, kdb)
 
 	// create gin router
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(cors.Default())
 
-	// bind handlers to router
+	// map the routes to the handlers
+	BindRoutes(r, knave, karma)
 
-	// knave compliment and insult
-	r.GET("/knavebot/v1/insult", knave.Insult)
-	r.GET("/knavebot/v1/compliment", knave.Compliment)
-
-	// karma
-	r.GET("/karmabot/v1/:team/:user", karma.GetKarma)
-	r.PUT("/karmabot/v1/:team/:user", karma.AddKarma)
-	r.DELETE("/karmabot/v1/:team/:user", karma.DelKarma)
-
-	// slack slash command integration
-	r.POST("/knavebot/v1/cmd/knave", knave.SlashKnave)
-	r.POST("/knavebot/v1/cmd/karma", karma.SlashKarma)
-	// backwards compatibility knave
-	r.POST("/knavebot/v1/insult", knave.SlashKnave)
-
-	r.Run() // listen and serve on 0.0.0.0:8080
+	// listen and serve on 0.0.0.0:8080
+	r.Run()
 }

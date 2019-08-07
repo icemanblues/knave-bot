@@ -1,5 +1,7 @@
 package main
 
+import "regexp"
+
 type CommandData struct {
 	Command      string `json:"command,omitempty"`
 	Text         string `json:"text,omitempty"`
@@ -38,4 +40,19 @@ func ErrorResponse(msg string) *Response {
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
 	}
+}
+
+var canonical = regexp.MustCompile("U[A-Z0-9]+")
+var escaped = regexp.MustCompile("<@(U[A-Z0-9]+)|.*>")
+
+// IsSlackUser returns the canonical slack user id. <@UAWQFTRT7|roland.kluge> => UAWQFTRT7
+func IsSlackUser(userID string) (string, bool) {
+	if escaped.MatchString(userID) {
+		return escaped.ReplaceAllString(userID, "$1"), true
+	}
+	if canonical.MatchString(userID) {
+		return userID, true
+	}
+
+	return "", false
 }
