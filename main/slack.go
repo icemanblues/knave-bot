@@ -12,12 +12,14 @@ type CommandData struct {
 	UserID       string `json:"user_id,omitempty"`
 }
 
+type Attachments struct {
+	Text string `json:"text,omitempty"`
+}
+
 type Response struct {
-	ResponseType string `json:"response_type,omitempty"`
-	Text         string `json:"text,omitempty"`
-	// Attachments  struct {
-	// 	Text string `json:"text,omitempty"`
-	// } `json:"attachments,omitempty"`
+	ResponseType string      `json:"response_type,omitempty"`
+	Text         string      `json:"text,omitempty"`
+	Attachments  Attachments `json:"attachments,omitempty"`
 }
 
 var ResponseType = struct {
