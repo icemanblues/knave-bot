@@ -43,7 +43,7 @@ func schema(db *sql.DB) error {
 	return nil
 }
 
-// initializes the db and tables that we require
+// InitDB initializes the db and tables that we require
 func InitDB() (*sql.DB, error) {
 	db, err := createDB()
 	if err != nil {

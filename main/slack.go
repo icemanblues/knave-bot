@@ -2,6 +2,7 @@ package main
 
 import "regexp"
 
+// CommandData data payload for a slash command
 type CommandData struct {
 	Command      string `json:"command,omitempty"`
 	Text         string `json:"text,omitempty"`
@@ -12,16 +13,19 @@ type CommandData struct {
 	UserID       string `json:"user_id,omitempty"`
 }
 
+// Attachments any additional "attachments" for a slash-command response
 type Attachments struct {
 	Text string `json:"text,omitempty"`
 }
 
+// Response a slack slash-command response
 type Response struct {
 	ResponseType string      `json:"response_type,omitempty"`
 	Text         string      `json:"text,omitempty"`
 	Attachments  Attachments `json:"attachments,omitempty"`
 }
 
+// ResponseType simple string enum for slash-command responses
 var ResponseType = struct {
 	InChannel string
 	Ephemeral string
@@ -30,6 +34,7 @@ var ResponseType = struct {
 	Ephemeral: "ephemeral",
 }
 
+// ChannelResponse factory method for a response that should be displayed to the entire channel
 func ChannelResponse(msg string) *Response {
 	return &Response{
 		ResponseType: ResponseType.InChannel,
@@ -37,6 +42,7 @@ func ChannelResponse(msg string) *Response {
 	}
 }
 
+// ErrorResponse factory method for a response that should be displayed only to the callee
 func ErrorResponse(msg string) *Response {
 	return &Response{
 		ResponseType: ResponseType.Ephemeral,

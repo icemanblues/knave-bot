@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// KarmaHandler interface for Karma handler
 type KarmaHandler interface {
 	GetKarma(c *gin.Context)
 	AddKarma(c *gin.Context)
@@ -14,11 +15,13 @@ type KarmaHandler interface {
 	SlashKarma(c *gin.Context)
 }
 
+// LiteKarmaHandler Karma Handler implementation using sqlite
 type LiteKarmaHandler struct {
 	kProc KarmaProcessor
 	kdb   KarmaDB
 }
 
+// GetKarma handler method to read the current karma for an individual
 func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
@@ -28,6 +31,7 @@ func (lkh *LiteKarmaHandler) GetKarma(c *gin.Context) {
 	c.String(200, "%v", k)
 }
 
+// AddKarma handler method to add (or subtract) karma from an individual
 func (lkh *LiteKarmaHandler) AddKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
@@ -43,6 +47,7 @@ func (lkh *LiteKarmaHandler) AddKarma(c *gin.Context) {
 	c.String(200, "%v", k)
 }
 
+// DelKarma handler method to delete (reset) karma to zer0
 func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
@@ -52,6 +57,7 @@ func (lkh *LiteKarmaHandler) DelKarma(c *gin.Context) {
 	c.String(200, "%v", k)
 }
 
+// SlashKarma handler method for the `/karma` slash-command
 func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 	data := &CommandData{
 		Command:      c.PostForm("command"),
@@ -73,6 +79,7 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 	c.JSON(200, response)
 }
 
+// NewKarmaHandler factory method
 func NewKarmaHandler(kProc KarmaProcessor, kdb KarmaDB) *LiteKarmaHandler {
 	return &LiteKarmaHandler{
 		kProc: kProc,

@@ -6,16 +6,19 @@ import (
 	"time"
 )
 
+// KarmaDB DAO for the Karma database
 type KarmaDB interface {
 	GetKarma(team, user string) int
 	UpdateKarma(team, user string, delta int) int
 	DeleteKarma(team, user string) int
 }
 
+// LiteKarmaDB a SQLite imlpementation of the Karma database
 type LiteKarmaDB struct {
 	db *sql.DB
 }
 
+// GetKarma returns the karma value for the user in a given team
 func (kdb *LiteKarmaDB) GetKarma(team, user string) int {
 	row := kdb.db.QueryRow(`
 		SELECT k.karma
@@ -33,6 +36,7 @@ func (kdb *LiteKarmaDB) GetKarma(team, user string) int {
 	return k
 }
 
+// UpdateKarma adds (or removes) karma from a user in a given team (workspace)
 func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) int {
 	// TODO: UpSert the current value plus delta. If no current value, assume 0
 	// currently we do a SELECT to determine if we need to do an insert or update
@@ -69,6 +73,7 @@ func (kdb *LiteKarmaDB) UpdateKarma(workspace, user string, delta int) int {
 	return kdb.GetKarma(workspace, user)
 }
 
+// DeleteKarma resets all karma for a given user in a given team to zer0
 func (kdb *LiteKarmaDB) DeleteKarma(team, user string) int {
 	_, err := kdb.db.Exec(`
 		DELETE FROM karma
@@ -82,6 +87,7 @@ func (kdb *LiteKarmaDB) DeleteKarma(team, user string) int {
 	return 0
 }
 
+// NewKdb factory method
 func NewKdb(db *sql.DB) *LiteKarmaDB {
 	return &LiteKarmaDB{db}
 }

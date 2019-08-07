@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Abs absolute value of an int
 func Abs(x int) int {
 	if x < 0 {
 		return -x
@@ -12,18 +13,22 @@ func Abs(x int) int {
 	return x
 }
 
+// KarmaProcessor processes slash-commands into slack responses
 type KarmaProcessor interface {
 	Process(cd *CommandData) (*Response, error)
 }
 
+// KdbProcessor an implementation of KarmaProcessor that uses SQLite
 type KdbProcessor struct {
 	kdb KarmaDB
 }
 
+// NewKdbProcessor factory method
 func NewKdbProcessor(kdb KarmaDB) *KdbProcessor {
 	return &KdbProcessor{kdb}
 }
 
+// Process handles Karma processing from slack API
 func (kp KdbProcessor) Process(c *CommandData) (*Response, error) {
 	if len(c.Text) == 0 {
 		return kp.help()
