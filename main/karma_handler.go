@@ -68,6 +68,8 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 	if err != nil {
 		response = ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 	}
+	fmt.Printf("Response: %v\n", response.Text)
+
 	c.JSON(200, response)
 }
 
