@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -68,13 +67,11 @@ func (lkh *LiteKarmaHandler) SlashKarma(c *gin.Context) {
 		ChannelID:    c.PostForm("channel_id"),
 		UserID:       c.PostForm("user_id"),
 	}
-	fmt.Printf("Command Data: %+v\n", data)
 
 	response, err := lkh.kProc.Process(data)
 	if err != nil {
 		response = ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 	}
-	fmt.Printf("Response: %v\n", response.Text)
 
 	c.JSON(200, response)
 }
