@@ -21,14 +21,12 @@ Should do something useful in response later
 
 
 * App Code Cleanliness
-** TODO DB SQL can be better written
-https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
-
-** DONE DAO should return errors
-** TODO refactor into Golang packages
-** DONE Godoc comments
-** TODO Tests
-** TODO Logging
 ** TODO environment configurations
 Use a json file and a config struct
-
+** TODO DB SQL can be better written
+https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
+** TODO Tests
+** TODO Logging
+** DONE DAO should return errors
+** DONE refactor into Golang packages
+** DONE Godoc comments
