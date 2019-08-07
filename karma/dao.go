@@ -29,7 +29,7 @@ func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 	var k int
 	err := row.Scan(&k)
 	if err != nil {
-		return 0, err
+		return 0, nil
 	}
 
 	return k, nil
