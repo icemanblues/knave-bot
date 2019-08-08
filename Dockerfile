@@ -7,16 +7,16 @@ RUN apk add --update --no-cache ca-certificates git gcc musl-dev
 # Fetch dependencies
 RUN mkdir /build 
 WORKDIR /build 
-COPY go.mod .
-COPY go.sum .
+COPY src .
+WORKDIR /build/src
+
 RUN go mod download
 
 # build the go binary
-COPY main .
-RUN CGO_ENABLED=1 GOOS=linux go build --tags "linux" -a -ldflags '-extldflags "-static"' -o knavebot main
+RUN CGO_ENABLED=1 GOOS=linux go build --tags "linux" -a -ldflags '-extldflags "-static"' -o knave-bot github.com/icemanblues/knave-bot
 
 # Run the binary in its own scratch container
 FROM scratch
-COPY --from=builder /build/knavebot /app/
+COPY --from=builder /build/src/knave-bot /app/
 WORKDIR /app
-CMD ["./knavebot"]
+CMD ["./knave-bot"]
