@@ -1,7 +1,7 @@
 package knave
 
 import (
-	"main/shakespeare"
+	"github.com/icemanblues/knave-bot/shakespeare"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,9 +1,10 @@
 package karma
 
 import (
-	"main/slack"
 	"strconv"
 	"strings"
+
+	"github.com/icemanblues/knave-bot/slack"
 )
 
 // Abs absolute value of an int

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"main/karma"
-	"main/knave"
+	"github.com/icemanblues/knave-bot/karma"
+	"github.com/icemanblues/knave-bot/knave"
 
 	"github.com/gin-gonic/gin"
 )

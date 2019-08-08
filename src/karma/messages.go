@@ -2,9 +2,10 @@ package karma
 
 import (
 	"fmt"
-	"main/shakespeare"
-	"main/slack"
 	"strings"
+
+	"github.com/icemanblues/knave-bot/shakespeare"
+	"github.com/icemanblues/knave-bot/slack"
 )
 
 func (kp SQLiteProcessor) karmaStatus(userID string, k int) (*slack.Response, error) {

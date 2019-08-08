@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"main/karma"
-	"main/knave"
-	"main/shakespeare"
+
+	"github.com/icemanblues/knave-bot/karma"
+	"github.com/icemanblues/knave-bot/knave"
+	"github.com/icemanblues/knave-bot/shakespeare"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

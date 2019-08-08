@@ -1,8 +1,9 @@
 package karma
 
 import (
-	"main/slack"
 	"strconv"
+
+	"github.com/icemanblues/knave-bot/slack"
 
 	"github.com/gin-gonic/gin"
 )
