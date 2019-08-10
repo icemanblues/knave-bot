@@ -13,16 +13,37 @@ type CommandData struct {
 	UserID       string `json:"user_id,omitempty"`
 }
 
+// Field tabular like data in an attachment
+type Field struct {
+	Title string `json:"title,omitempty"`
+	Value string `json:"value,omitempty"`
+	Short bool   `json:"short,omitempty"`
+}
+
 // Attachments any additional "attachments" for a slash-command response
 type Attachments struct {
+	// Fallback   string `json:"fallback,omitempty"`
+	// Color      string `json:"color,omitempty"`
+	// Pretext    string `json:"pretext,omitempty"`
+	// AuthorLink string `json:"author_link,omitempty"`
+	// AuthorName string `json:"author_name,omitempty"`
+	// AuthorIcon string `json:"author_icon,omitempty"`
+	// Title      string `json:"title,omitempty"`
+	// TitleLink  string `json:"title_link,omitempty"`
 	Text string `json:"text,omitempty"`
+	// Fields []Field `json:"fields,omitempty"`
+	// ImageURL   string `json:"image_url,omitempty"`
+	// ThumbURL   string `json:"thumb_url,omitempty"`
+	// Footer     string `json:"footer,omitempty"`
+	// FooterIcon string `json:"footer_icon,omitempty"`
+	// Timestamp  string `json:"ts,omitempty"`
 }
 
 // Response a slack slash-command response
 type Response struct {
-	ResponseType string      `json:"response_type,omitempty"`
-	Text         string      `json:"text,omitempty"`
-	Attachments  Attachments `json:"attachments,omitempty"`
+	ResponseType string        `json:"response_type,omitempty"`
+	Text         string        `json:"text,omitempty"`
+	Attachments  []Attachments `json:"attachments,omitempty"`
 }
 
 // ResponseType simple string enum for slash-command responses
@@ -47,7 +68,7 @@ func ChannelAttachmentsResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.InChannel,
 		Text:         msg,
-		Attachments:  Attachments{att},
+		Attachments:  []Attachments{Attachments{att}},
 	}
 }
 
@@ -56,7 +77,7 @@ func DirectResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
-		Attachments:  Attachments{att},
+		Attachments:  []Attachments{Attachments{att}},
 	}
 }
 
