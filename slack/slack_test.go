@@ -11,6 +11,7 @@ func TestIsSlackUser(t *testing.T) {
 	}{
 		{"escaped", "<@UAWQFTRT7|roland.kluge>", true, "UAWQFTRT7"},
 		{"canonical", "UAWQFTRT7", true, "UAWQFTRT7"},
+		{"escaped-no-bar", "<@UAWQFTRT7>", true, "UAWQFTRT7"},
 		{"fail", "fail", false, ""},
 	}
 

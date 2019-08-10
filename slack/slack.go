@@ -69,7 +69,7 @@ func ErrorResponse(msg string) *Response {
 }
 
 var canonical = regexp.MustCompile("U[A-Z0-9]+")
-var escaped = regexp.MustCompile("<@(U[A-Z0-9]+)|.*>")
+var escaped = regexp.MustCompile("<@(U[A-Z0-9]+).*>")
 
 // IsSlackUser returns the canonical slack user id. <@UAWQFTRT7|roland.kluge> => UAWQFTRT7
 func IsSlackUser(userID string) (string, bool) {
