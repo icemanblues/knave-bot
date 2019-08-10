@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// DAO DAO for the Karma database
+// DAO Data Access Object for the Karma database
 type DAO interface {
 	GetKarma(team, user string) (int, error)
 	UpdateKarma(team, user string, delta int) (int, error)
@@ -23,7 +23,7 @@ func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 		SELECT k.karma
 		FROM   karma k
 		WHERE  k.team = ?
-		AND	   k.user = ?
+		AND	   k.user = ?;
 	`, team, user)
 
 	var k int
@@ -37,39 +37,17 @@ func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
 func (kdb *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
-	// TODO: UpSert the current value plus delta. If no current value, assume 0
-	// currently we do a SELECT to determine if we need to do an insert or update
-	// in the future, we will combine this into a proper UpSert
-	// and use the returning syntax to make it atomic
-	k, err := kdb.GetKarma(workspace, user)
+	_, err := kdb.db.Exec(`
+		INSERT INTO karma
+		(team, user, karma, created_at, updated_at)
+		VALUES
+		(?, ?, ?, ?, ?)
+		ON CONFLICT(team, user) DO UPDATE SET 
+		karma = karma + excluded.karma,
+		updated_at = excluded.updated_at;
+	`, workspace, user, delta, time.Now(), time.Now())
 	if err != nil {
 		return 0, err
-	}
-
-	if k == 0 {
-		// insert
-		_, err := kdb.db.Exec(`
-			INSERT INTO karma
-			(team, user, karma, created_at, updated_at)
-			VALUES
-			(?, ?, ?, ?, ?)
-		`, workspace, user, delta, time.Now(), time.Now())
-		if err != nil {
-			return k, err
-		}
-		return delta, nil
-	}
-
-	// update
-	_, err = kdb.db.Exec(`
-		UPDATE karma
-		SET	karma = karma + ?,
-			updated_at = ?
-		WHERE  team = ?
-		AND	   user = ? 
-	`, delta, time.Now(), workspace, user)
-	if err != nil {
-		return k, nil
 	}
 
 	return kdb.GetKarma(workspace, user)
@@ -80,7 +58,7 @@ func (kdb *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
 	_, err := kdb.db.Exec(`
 		DELETE FROM karma
 		WHERE  team = ?
-		AND	   user = ? 
+		AND	   user = ?;
 	`, team, user)
 	if err != nil {
 		return 0, err

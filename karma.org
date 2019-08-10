@@ -24,7 +24,7 @@ Should do something useful in response later
 * App Code Cleanliness
 ** TODO environment configurations
 Use a json file and a config struct
-** TODO DB SQL can be better written
+** DONE DB SQL can be better written
 https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
 ** TODO Tests
 ** TODO Logging
