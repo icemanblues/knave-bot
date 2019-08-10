@@ -2,7 +2,8 @@
 Move it outside of the container, using mount
 See how mysql is handled
 
-* Better messaging
+* Better message formatting
+https://api.slack.com/docs/messages/builder
 
 * Update Slash Command on Slack
 ** TODO Short Description
