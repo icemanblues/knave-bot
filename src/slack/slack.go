@@ -42,6 +42,24 @@ func ChannelResponse(msg string) *Response {
 	}
 }
 
+// ChannelAttachmentsResponse factory method for a response (with attachment) to the channel
+func ChannelAttachmentsResponse(msg, att string) *Response {
+	return &Response{
+		ResponseType: ResponseType.InChannel,
+		Text:         msg,
+		Attachments:  Attachments{att},
+	}
+}
+
+// DirectResponse factory method for a response (with attachment) to the callee
+func DirectResponse(msg, att string) *Response {
+	return &Response{
+		ResponseType: ResponseType.Ephemeral,
+		Text:         msg,
+		Attachments:  Attachments{att},
+	}
+}
+
 // ErrorResponse factory method for a response that should be displayed only to the callee
 func ErrorResponse(msg string) *Response {
 	return &Response{

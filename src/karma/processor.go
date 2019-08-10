@@ -1,6 +1,7 @@
 package karma
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -31,71 +32,69 @@ func NewProcessor(kdb DAO) *SQLiteProcessor {
 }
 
 // Process handles Karma processing from slack API
-func (kp SQLiteProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
+func (p SQLiteProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	if len(c.Text) == 0 {
-		return kp.help()
+		return p.help()
 	}
 
 	words := strings.Fields(c.Text)
 	if len(words) == 0 {
-		return kp.help()
+		return p.help()
 	}
 
 	switch words[0] {
 	case "help":
-		return kp.help()
+		return p.help()
 
 	case "me":
-		return kp.me(c.TeamID, c.UserID)
+		return p.me(c.TeamID, c.UserID)
 
 	case "status":
-		if len(words) == 1 {
-			return slack.ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
-		}
-
-		target := words[1]
-		t, ok := slack.IsSlackUser(target)
-		if !ok {
-			return slack.ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
-		}
-		return kp.me(c.TeamID, t)
+		return p.status(c.TeamID, c.UserID, words)
 
 	case "++":
-		if len(words) == 1 {
-			return slack.ErrorResponse("I need to know whose karma to update.\n`/karma ++ @name`"), nil
-		}
+		return p.add(c.TeamID, c.UserID, words)
 
-		target := words[1]
-		t, ok := slack.IsSlackUser(target)
-		if !ok {
-			return slack.ErrorResponse("I'm not sure that id a valid slack user.\n`/karma ++ @name`"), nil
-		}
-
-		if t == c.UserID {
-			return slack.ErrorResponse("Don't be a weasel. For Shame!"), nil
-		}
-
-		// optional: see if next parameter is an amount, if so, use it
-		delta := 1
-		if len(words) > 2 {
-			if d, err := strconv.Atoi(words[2]); err == nil {
-				// Might need to do a ABS here
-				delta = Abs(d)
-			}
-		}
-
-		if delta == 0 {
-			return slack.ErrorResponse("Don't waste my time. For shame!"), nil
-		}
-
-		return kp.delta(c.TeamID, t, delta)
+	case "--":
+		return p.subtract(c.TeamID, c.UserID, words)
 
 	default:
-		return kp.help()
+		return p.help()
 	}
 }
 
-func (kp SQLiteProcessor) help() (*slack.Response, error) {
+func parseArg(words []string, idx int) (string, bool) {
+	if idx >= len(words) {
+		return "", false
+	}
+
+	return words[idx], true
+}
+
+func parseArgInt(words []string, idx int) (int, bool) {
+	s, ok := parseArg(words, idx)
+	if !ok {
+		return 0, false
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
+}
+
+func parseArgUser(words []string, idx int) (string, bool) {
+	s, ok := parseArg(words, idx)
+	if !ok {
+		return "", false
+	}
+
+	return slack.IsSlackUser(s)
+}
+
+func (p SQLiteProcessor) help() (*slack.Response, error) {
 	return slack.ErrorResponse(`
 	*Help* This will provide you with additional information on how to work with Karma.
 	* _me_ This will return your current karma.
@@ -105,20 +104,117 @@ func (kp SQLiteProcessor) help() (*slack.Response, error) {
 	`), nil
 }
 
-func (kp SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
-	k, err := kp.kdb.GetKarma(team, userID)
+func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
+	k, err := p.kdb.GetKarma(team, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return kp.karmaStatus(userID, k)
+	msg, att := &strings.Builder{}, &strings.Builder{}
+	UserStatus(userID, k, msg)
+	Salutation(k, att)
+	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (kp SQLiteProcessor) delta(team, userID string, delta int) (*slack.Response, error) {
-	k, err := kp.kdb.UpdateKarma(team, userID, delta)
+func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Response, error) {
+	name, ok := parseArg(words, 1)
+	if !ok {
+		return slack.ErrorResponse("I need to know whose karma to retrieve.\n`/karma status @name`"), nil
+	}
+
+	target, ok := slack.IsSlackUser(name)
+	if !ok {
+		return slack.ErrorResponse("I'm not sure that name is a valid slack user.\n`/karma status @name`"), nil
+	}
+
+	k, err := p.kdb.GetKarma(team, target)
 	if err != nil {
 		return nil, err
 	}
 
-	return kp.karmaStatus(userID, k)
+	msg, att := &strings.Builder{}, &strings.Builder{}
+	msg.WriteString(fmt.Sprintf("<@%s> has requested <@%s> karma. ", callee, target))
+	UserStatus(target, k, msg)
+	Salutation(k, att)
+	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
+}
+
+func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Response, error) {
+	name, ok := parseArg(words, 1)
+	if !ok {
+		return slack.ErrorResponse("To whom do you want to give karma?\n`/karma ++ @name`"), nil
+	}
+
+	target, ok := slack.IsSlackUser(name)
+	if !ok {
+		return slack.ErrorResponse("I'm not sure that is a valid slack user.\n`/karma ++ @name`"), nil
+	}
+
+	if target == callee {
+		return slack.ErrorResponse("Don't be a weasel. For Shame!"), nil
+	}
+
+	// optional: see if next parameter is an amount, if so, use it
+	delta, ok := parseArgInt(words, 2)
+	if !ok {
+		delta = 1
+	}
+
+	if delta == 0 {
+		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
+	}
+	if delta < 0 {
+		return slack.ErrorResponse("`++` is used to give karma. Try `--` to take away karma."), nil
+	}
+
+	k, err := p.kdb.UpdateKarma(team, target, delta)
+	if err != nil {
+		return nil, err
+	}
+
+	msg, att := &strings.Builder{}, &strings.Builder{}
+	msg.WriteString(fmt.Sprintf("<@%s> is giving %v karma to <@%s>. ", callee, delta, target))
+	UserStatus(target, k, msg)
+	Salutation(delta, att)
+	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
+}
+
+func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.Response, error) {
+	name, ok := parseArg(words, 1)
+	if !ok {
+		return slack.ErrorResponse("To whom do you want to take karma?\n`/karma -- @name`"), nil
+	}
+
+	target, ok := slack.IsSlackUser(name)
+	if !ok {
+		return slack.ErrorResponse("I'm not sure that is a valid slack user.\n`/karma -- @name`"), nil
+	}
+
+	if target == callee {
+		return slack.ErrorResponse("Do you have something to confess? Why remove your own karma?"), nil
+	}
+
+	// optional: see if next parameter is an amount, if so, use it
+	delta, ok := parseArgInt(words, 2)
+	if !ok {
+		delta = 1
+	}
+
+	if delta == 0 {
+		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
+	}
+	if delta < 0 {
+		return slack.ErrorResponse("Negative karma doesn't make sense. Please use positive numbers!"), nil
+	}
+
+	k, err := p.kdb.UpdateKarma(team, target, -delta)
+	if err != nil {
+		return nil, err
+	}
+
+	msg, att := &strings.Builder{}, &strings.Builder{}
+	msg.WriteString(fmt.Sprintf("<@%s> is taking away %v karma from <@%s> . ", callee, delta, target))
+	UserStatus(target, k, msg)
+	Salutation(-delta, att)
+	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
