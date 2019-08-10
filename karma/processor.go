@@ -100,6 +100,7 @@ func (p SQLiteProcessor) help() (*slack.Response, error) {
 	* _me_ This will return your current karma.
 	* _status_ Provide a user, and it will return their current karma
 	* _++_ Provide a user and it will increase their karma. Optionally, pass a quantity of karma to give.
+	* _--_ Provide a user and it will decrease their karma. Optionally, pass a quantity of karma to take.
 	* _help_ this helpful dialogue. You're welcome!
 	`), nil
 }
@@ -113,7 +114,7 @@ func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	UserStatus(userID, k, msg)
 	Salutation(k, att)
-	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
+	return slack.DirectResponse(msg.String(), att.String()), nil
 }
 
 func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Response, error) {
@@ -213,7 +214,7 @@ func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.R
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> is taking away %v karma from <@%s> . ", callee, delta, target))
+	msg.WriteString(fmt.Sprintf("<@%s> is taking away %v karma from <@%s>. ", callee, delta, target))
 	UserStatus(target, k, msg)
 	Salutation(-delta, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
