@@ -3,19 +3,20 @@ package karma
 import (
 	"database/sql"
 	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3" // sqlite db driver
 )
 
-func createDB() (*sql.DB, error) {
+func createDB(dataSourceName string) (*sql.DB, error) {
 	// create the directories required for the database file
-	// TODO: Probably should parameterize this to be environment (LOCAL, PROD) friendly
-	err := os.MkdirAll("/var/lib/sqlite", os.ModeDir|0755)
+	dir := filepath.Dir(dataSourceName)
+	err := os.MkdirAll(dir, os.ModeDir|0755)
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite3", "/var/lib/sqlite/karma.db")
+	db, err := sql.Open("sqlite3", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +45,8 @@ func schema(db *sql.DB) error {
 }
 
 // InitDB initializes the db and tables that we require
-func InitDB() (*sql.DB, error) {
-	db, err := createDB()
+func InitDB(dataSourceName string) (*sql.DB, error) {
+	db, err := createDB(dataSourceName)
 	if err != nil {
 		return nil, err
 	}

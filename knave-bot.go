@@ -25,7 +25,7 @@ func main() {
 	log.Infof("Compliment: %v", shakespeare.Compliment())
 
 	// initialize database
-	db, err := karma.InitDB()
+	db, err := karma.InitDB("/var/lib/sqlite/karma.db")
 	if err != nil {
 		log.Panic("Unable to initialize the database", err)
 		panic(err)
