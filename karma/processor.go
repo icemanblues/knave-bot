@@ -71,15 +71,15 @@ func parseArg(words []string, idx int) (string, bool) {
 	return words[idx], true
 }
 
-func parseArgInt(words []string, idx int) (int, bool) {
+func parseArgInt(words []string, idx int, d int) (int, bool) {
 	s, ok := parseArg(words, idx)
 	if !ok {
-		return 0, false
+		return d, false
 	}
 
 	i, err := strconv.Atoi(s)
 	if err != nil {
-		return 0, false
+		return d, false
 	}
 
 	return i, true
@@ -155,12 +155,7 @@ func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Respon
 		return slack.ErrorResponse("Don't be a weasel. For Shame!"), nil
 	}
 
-	// optional: see if next parameter is an amount, if so, use it
-	delta, ok := parseArgInt(words, 2)
-	if !ok {
-		delta = 1
-	}
-
+	delta, _ := parseArgInt(words, 2, 1)
 	if delta == 0 {
 		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
 	}
@@ -196,11 +191,7 @@ func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.R
 	}
 
 	// optional: see if next parameter is an amount, if so, use it
-	delta, ok := parseArgInt(words, 2)
-	if !ok {
-		delta = 1
-	}
-
+	delta, _ := parseArgInt(words, 2, 1)
 	if delta == 0 {
 		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
 	}
