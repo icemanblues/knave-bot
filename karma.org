@@ -3,6 +3,10 @@ Move it outside of the container, using mount
 See how mysql is handled
 
 * Better message formatting
+** TODO Reusable messaging constants
+Instead of having magic strings all over the processor.
+move the strings to consts. So the copytext can be easily updated
+** TODO Pretty Slack Formatting
 https://api.slack.com/docs/messages/builder
 
 * Update Slash Command on Slack
@@ -27,7 +31,7 @@ Use a json file and a config struct
 ** DONE DB SQL can be better written
 https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
 ** TODO Tests
-** TODO Logging
+** DONE Logging
 ** DONE DAO should return errors
 ** DONE refactor into Golang packages
 ** DONE Godoc comments
