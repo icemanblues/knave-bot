@@ -3,6 +3,8 @@ package karma
 import (
 	"database/sql"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // DAO Data Access Object for the Karma database
@@ -29,6 +31,7 @@ func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 	var k int
 	err := row.Scan(&k)
 	if err != nil {
+		log.Error("Unable to scan the row. It must be empty, query returned 0 rows.", team, user, err)
 		return 0, nil
 	}
 
@@ -47,6 +50,7 @@ func (kdb *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error
 		updated_at = excluded.updated_at;
 	`, workspace, user, delta, time.Now(), time.Now())
 	if err != nil {
+		log.Error("Could not Insert or Update karma.", workspace, user, delta, err)
 		return 0, err
 	}
 

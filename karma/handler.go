@@ -6,6 +6,8 @@ import (
 	"github.com/icemanblues/knave-bot/slack"
 
 	"github.com/gin-gonic/gin"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Handler interface for Karma handler
@@ -29,7 +31,7 @@ func (lkh *SQLiteHandler) GetKarma(c *gin.Context) {
 
 	k, err := lkh.kdb.GetKarma(team, user)
 	if err != nil {
-		c.Error(err)
+		log.Error("Unable to look up karma.", team, user, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
 	}
 
@@ -44,13 +46,14 @@ func (lkh *SQLiteHandler) AddKarma(c *gin.Context) {
 	d := c.Query("delta")
 	delta, err := strconv.Atoi(d)
 	if err != nil {
+		log.Error("Not a valid integer.", team, user, delta, err)
 		c.String(400, "Please pass a valid integer. %v", d)
 		return
 	}
 
 	k, err := lkh.kdb.UpdateKarma(team, user, delta)
 	if err != nil {
-		c.Error(err)
+		log.Error("Unable to add or remove karma.", team, user, delta, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
 	}
 	c.String(200, "%v", k)
@@ -63,7 +66,7 @@ func (lkh *SQLiteHandler) DelKarma(c *gin.Context) {
 
 	k, err := lkh.kdb.DeleteKarma(team, user)
 	if err != nil {
-		c.Error(err)
+		log.Error("Unable to reset karma.", team, user, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
 	}
 
@@ -84,7 +87,7 @@ func (lkh *SQLiteHandler) SlashKarma(c *gin.Context) {
 
 	response, err := lkh.kProc.Process(data)
 	if err != nil {
-		c.Error(err)
+		log.Error("Could not process a slack slash command.", data, err)
 		response = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 	}
 

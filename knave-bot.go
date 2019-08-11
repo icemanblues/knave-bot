@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/icemanblues/knave-bot/karma"
 	"github.com/icemanblues/knave-bot/knave"
@@ -9,16 +9,25 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	// TODO: Move these to log lines
-	fmt.Printf("Insult: %v\n", shakespeare.Insult())
-	fmt.Printf("Compliment: %v\n", shakespeare.Compliment())
+	// initialize logger
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+	log.SetReportCaller(true) // This could have performance impact
+
+	log.Infof("Insult: %v", shakespeare.Insult())
+	log.Infof("Compliment: %v", shakespeare.Compliment())
 
 	// initialize database
 	db, err := karma.InitDB()
 	if err != nil {
+		log.Panic("Unable to initialize the database", err)
 		panic(err)
 	}
 
