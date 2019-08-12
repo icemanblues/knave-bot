@@ -155,6 +155,9 @@ func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Respon
 	if delta < 0 {
 		return slack.ErrorResponse(msgAddCantRemove), nil
 	}
+	if delta > 5 {
+		return slack.ErrorResponse(msgDeltaLimit), nil
+	}
 
 	k, err := p.kdb.UpdateKarma(team, target, delta)
 	if err != nil {
@@ -190,6 +193,9 @@ func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.R
 	}
 	if delta < 0 {
 		return slack.DirectResponse(msgSubtractCantAdd, cmdSub), nil
+	}
+	if delta > 5 {
+		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
 	k, err := p.kdb.UpdateKarma(team, target, -delta)

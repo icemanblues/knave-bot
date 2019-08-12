@@ -58,6 +58,7 @@ func helpResponse(msg string) *slack.Response {
 const msgMissingName = "I need to know whose karma to retrieve."
 const msgNoOp = "Don't waste my time. For shame!"
 const msgInvalidUser = "I'm not sure that name is a valid slack user."
+const msgDeltaLimit = "Whoa there! Let's keep the karma swings to 5 and under."
 
 const msgAddMissingTarget = "To whom do you want to give karma?"
 const msgAddSelfTarget = "Don't be a weasel. For Shame!"
