@@ -31,6 +31,11 @@ Use a json file and a config struct
 ** DONE DB SQL can be better written
 https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/15277374
 ** TODO Tests
+Coverage
+- Karma
+- Knave
+- Shakespeare
+https://github.com/gin-gonic/gin#testing
 ** DONE Logging
 ** DONE DAO should return errors
 ** DONE refactor into Golang packages

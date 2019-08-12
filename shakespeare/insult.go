@@ -1,12 +1,6 @@
 package shakespeare
 
-import (
-	"fmt"
-	"math/rand"
-	"time"
-)
-
-// Thou .
+// Thou Thou
 const Thou = "Thou"
 
 var insultA = []string{
@@ -168,11 +162,10 @@ var insultC = []string{
 	"wagtail",
 }
 
+// InsultGenerator Generator for Shakespearean Insults
+var InsultGenerator = New(Thou, "", [][]string{insultA, insultB, insultC})
+
 // Insult randomly generates a Shakespearean Insult
 func Insult() string {
-	rand.Seed(time.Now().Unix())
-	r1 := rand.Intn(len(insultA))
-	r2 := rand.Intn(len(insultB))
-	r3 := rand.Intn(len(insultC))
-	return fmt.Sprintf("%s %s %s %s", Thou, insultA[r1], insultB[r2], insultC[r3])
+	return InsultGenerator.Sentence()
 }

@@ -1,11 +1,5 @@
 package shakespeare
 
-import (
-	"fmt"
-	"math/rand"
-	"time"
-)
-
 var complimentA = []string{
 	"rare",
 	"sweet",
@@ -44,11 +38,10 @@ var complimentC = []string{
 	"valentine",
 }
 
+// ComplimentGenerator Generator for Shakespearean Compliments
+var ComplimentGenerator = New(Thou, "", [][]string{complimentA, complimentB, complimentC})
+
 // Compliment randomly generates a Shakespearean Compliment
 func Compliment() string {
-	rand.Seed(time.Now().Unix())
-	r1 := rand.Intn(len(complimentA))
-	r2 := rand.Intn(len(complimentB))
-	r3 := rand.Intn(len(complimentC))
-	return fmt.Sprintf("%s %s %s %s", Thou, complimentA[r1], complimentB[r2], complimentC[r3])
+	return ComplimentGenerator.Sentence()
 }
