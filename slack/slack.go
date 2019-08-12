@@ -22,16 +22,16 @@ type Field struct {
 
 // Attachments any additional "attachments" for a slash-command response
 type Attachments struct {
-	// Fallback   string `json:"fallback,omitempty"`
+	Fallback string `json:"fallback,omitempty"`
 	// Color      string `json:"color,omitempty"`
-	// Pretext    string `json:"pretext,omitempty"`
+	Pretext string `json:"pretext,omitempty"`
 	// AuthorLink string `json:"author_link,omitempty"`
 	// AuthorName string `json:"author_name,omitempty"`
 	// AuthorIcon string `json:"author_icon,omitempty"`
-	// Title      string `json:"title,omitempty"`
-	// TitleLink  string `json:"title_link,omitempty"`
-	Text string `json:"text,omitempty"`
-	// Fields []Field `json:"fields,omitempty"`
+	Title     string  `json:"title,omitempty"`
+	TitleLink string  `json:"title_link,omitempty"`
+	Text      string  `json:"text,omitempty"`
+	Fields    []Field `json:"fields,omitempty"`
 	// ImageURL   string `json:"image_url,omitempty"`
 	// ThumbURL   string `json:"thumb_url,omitempty"`
 	// Footer     string `json:"footer,omitempty"`
@@ -68,7 +68,7 @@ func ChannelAttachmentsResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.InChannel,
 		Text:         msg,
-		Attachments:  []Attachments{Attachments{att}},
+		Attachments:  []Attachments{Attachments{Text: att}},
 	}
 }
 
@@ -77,7 +77,7 @@ func DirectResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
-		Attachments:  []Attachments{Attachments{att}},
+		Attachments:  []Attachments{Attachments{Text: att}},
 	}
 }
 

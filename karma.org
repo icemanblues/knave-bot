@@ -3,10 +3,10 @@ Move it outside of the container, using mount
 See how mysql is handled
 
 * Better message formatting
-** TODO Reusable messaging constants
+** DONE Reusable messaging constants
 Instead of having magic strings all over the processor.
 move the strings to consts. So the copytext can be easily updated
-** TODO Pretty Slack Formatting
+** DONE Pretty Slack Formatting
 https://api.slack.com/docs/messages/builder
 
 * Update Slash Command on Slack
@@ -34,7 +34,8 @@ https://stackoverflow.com/questions/15277373/sqlite-upsert-update-or-insert/1527
 Coverage
 - Karma
 - Knave
-- Shakespeare
+- DONE Shakespeare
+
 https://github.com/gin-gonic/gin#testing
 ** DONE Logging
 ** DONE DAO should return errors

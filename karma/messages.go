@@ -5,7 +5,67 @@ import (
 	"strings"
 
 	"github.com/icemanblues/knave-bot/shakespeare"
+	"github.com/icemanblues/knave-bot/slack"
 )
+
+const cmdMe = "/karma me"
+const cmdStatus = "/karma status @user"
+const cmdAdd = "/karma ++ @user"
+const cmdSub = "/karma -- @user"
+const cmdHelp = "/karma help"
+
+func helpResponse(msg string) *slack.Response {
+	return &slack.Response{
+		ResponseType: slack.ResponseType.Ephemeral,
+		Text:         msg,
+		Attachments: []slack.Attachments{
+			{
+				Fallback: "*Help* Helpful information on how to manage karma.",
+				Title:    "Helpful information on how to manage karma.",
+				Text:     "Below are the sub-commands:",
+				Fields: []slack.Field{
+					{
+						Title: cmdMe,
+						Value: "Return your karma.",
+						Short: true,
+					},
+					{
+						Title: cmdStatus,
+						Value: "Provide a @user and return their karma.",
+						Short: true,
+					},
+					{
+						Title: cmdAdd,
+						Value: "Provide a @user and increase their karma. Optionally, pass a quantity of karma to give.",
+						Short: true,
+					},
+					{
+						Title: cmdSub,
+						Value: "Provide a @user and decrease their karma. Optionally, pass a quantity of karma to take.",
+						Short: true,
+					},
+					{
+						Title: cmdHelp,
+						Value: "This helpful dialogue. You're welcome!",
+						Short: true,
+					},
+				},
+			},
+		},
+	}
+}
+
+const msgMissingName = "I need to know whose karma to retrieve."
+const msgNoOp = "Don't waste my time. For shame!"
+const msgInvalidUser = "I'm not sure that name is a valid slack user."
+
+const msgAddMissingTarget = "To whom do you want to give karma?"
+const msgAddSelfTarget = "Don't be a weasel. For Shame!"
+const msgAddCantRemove = "`++` is used to give karma. Try `--` to take away karma."
+
+const msgSubtractMissingTarget = "From whom do you want to take karma away?"
+const msgSubtractSelfTarget = "Do you have something to confess? Why remove your own karma?"
+const msgSubtractCantAdd = "Negative karma doesn't make sense. Please use positive numbers!"
 
 // UserStatus appends the User's Karma status
 func UserStatus(userID string, k int, sb *strings.Builder) {

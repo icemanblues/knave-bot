@@ -95,14 +95,7 @@ func parseArgUser(words []string, idx int) (string, bool) {
 }
 
 func (p SQLiteProcessor) help() (*slack.Response, error) {
-	return slack.ErrorResponse(`
-	*Help* This will provide you with additional information on how to work with Karma.
-	* _me_ This will return your current karma.
-	* _status_ Provide a user, and it will return their current karma
-	* _++_ Provide a user and it will increase their karma. Optionally, pass a quantity of karma to give.
-	* _--_ Provide a user and it will decrease their karma. Optionally, pass a quantity of karma to take.
-	* _help_ this helpful dialogue. You're welcome!
-	`), nil
+	return helpResponse(""), nil
 }
 
 func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
@@ -120,12 +113,12 @@ func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
 func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
-		return slack.ErrorResponse("I need to know whose karma to retrieve.\n`/karma status @name`"), nil
+		return slack.DirectResponse(msgMissingName, cmdStatus), nil
 	}
 
 	target, ok := slack.IsSlackUser(name)
 	if !ok {
-		return slack.ErrorResponse("I'm not sure that name is a valid slack user.\n`/karma status @name`"), nil
+		return slack.DirectResponse(msgInvalidUser, cmdStatus), nil
 	}
 
 	k, err := p.kdb.GetKarma(team, target)
@@ -134,7 +127,7 @@ func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Res
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> has requested <@%s> karma. ", callee, target))
+	msg.WriteString(fmt.Sprintf("<@%s> has requested karma total for <@%s>.", callee, target))
 	UserStatus(target, k, msg)
 	Salutation(k, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
@@ -143,24 +136,24 @@ func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Res
 func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
-		return slack.ErrorResponse("To whom do you want to give karma?\n`/karma ++ @name`"), nil
+		return slack.DirectResponse(msgAddMissingTarget, cmdAdd), nil
 	}
 
 	target, ok := slack.IsSlackUser(name)
 	if !ok {
-		return slack.ErrorResponse("I'm not sure that is a valid slack user.\n`/karma ++ @name`"), nil
+		return slack.DirectResponse(msgInvalidUser, cmdAdd), nil
 	}
 
 	if target == callee {
-		return slack.ErrorResponse("Don't be a weasel. For Shame!"), nil
+		return slack.ErrorResponse(msgAddSelfTarget), nil
 	}
 
 	delta, _ := parseArgInt(words, 2, 1)
 	if delta == 0 {
-		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
+		return slack.ErrorResponse(msgNoOp), nil
 	}
 	if delta < 0 {
-		return slack.ErrorResponse("`++` is used to give karma. Try `--` to take away karma."), nil
+		return slack.ErrorResponse(msgAddCantRemove), nil
 	}
 
 	k, err := p.kdb.UpdateKarma(team, target, delta)
@@ -178,25 +171,25 @@ func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Respon
 func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
-		return slack.ErrorResponse("To whom do you want to take karma?\n`/karma -- @name`"), nil
+		return slack.DirectResponse(msgSubtractMissingTarget, cmdSub), nil
 	}
 
 	target, ok := slack.IsSlackUser(name)
 	if !ok {
-		return slack.ErrorResponse("I'm not sure that is a valid slack user.\n`/karma -- @name`"), nil
+		return slack.DirectResponse(msgInvalidUser, cmdSub), nil
 	}
 
 	if target == callee {
-		return slack.ErrorResponse("Do you have something to confess? Why remove your own karma?"), nil
+		return slack.ErrorResponse(msgSubtractSelfTarget), nil
 	}
 
 	// optional: see if next parameter is an amount, if so, use it
 	delta, _ := parseArgInt(words, 2, 1)
 	if delta == 0 {
-		return slack.ErrorResponse("Don't waste my time. For shame!"), nil
+		return slack.DirectResponse(msgNoOp, cmdSub), nil
 	}
 	if delta < 0 {
-		return slack.ErrorResponse("Negative karma doesn't make sense. Please use positive numbers!"), nil
+		return slack.DirectResponse(msgSubtractCantAdd, cmdSub), nil
 	}
 
 	k, err := p.kdb.UpdateKarma(team, target, -delta)
