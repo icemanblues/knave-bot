@@ -17,17 +17,17 @@ type Handler interface {
 type GinHandler struct{}
 
 // Insult handler function to generate an insult
-func (gkh *GinHandler) Insult(c *gin.Context) {
+func (g *GinHandler) Insult(c *gin.Context) {
 	c.String(200, "%s", shakespeare.Insult())
 }
 
 // Compliment handler function to generate a complement
-func (gkh *GinHandler) Compliment(c *gin.Context) {
+func (g *GinHandler) Compliment(c *gin.Context) {
 	c.String(200, "%s", shakespeare.Compliment())
 }
 
 // SlashKnave handler function for slash-command `/knave`
-func (gkh *GinHandler) SlashKnave(c *gin.Context) {
+func (g *GinHandler) SlashKnave(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"text":          shakespeare.Insult(),
 		"response_type": "in_channel",
