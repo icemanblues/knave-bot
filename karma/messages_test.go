@@ -48,25 +48,25 @@ func TestSalutation(t *testing.T) {
 	testcases := []struct {
 		name     string
 		karma    int
-		length int
+		length   int
 		expected string
 	}{
 		{
 			name:     "positive karma compliment",
 			karma:    5,
-			length: 4,
+			length:   4,
 			expected: "",
 		},
 		{
 			name:     "negative karma insult",
 			karma:    -1,
-			length: 4,
+			length:   4,
 			expected: "",
 		},
 		{
 			name:     "no karma silence",
 			karma:    0,
-			length: 0,
+			length:   0,
 			expected: "",
 		},
 	}
@@ -76,7 +76,8 @@ func TestSalutation(t *testing.T) {
 			sb := &strings.Builder{}
 			Salutation(test.karma, sb)
 			actual := sb.String()
-			// Since I don't know how to detext an insult from a compliment, this is silly
+			// FIXME: Since I don't know how to detect an insult from a compliment, this is silly
+			// Prolly should inject the shakespeare.Generators for this
 			if actual != test.expected && len(actual) < test.length {
 				t.Error()
 			}

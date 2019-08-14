@@ -64,7 +64,7 @@ func (p SQLiteProcessor) Process(c *slack.CommandData) (*slack.Response, error) 
 }
 
 func parseArg(words []string, idx int) (string, bool) {
-	if idx >= len(words) {
+	if idx >= len(words) || idx < 0 {
 		return "", false
 	}
 
