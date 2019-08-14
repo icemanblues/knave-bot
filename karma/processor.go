@@ -95,7 +95,7 @@ func parseArgUser(words []string, idx int) (string, bool) {
 }
 
 func (p SQLiteProcessor) help() (*slack.Response, error) {
-	return helpResponse(""), nil
+	return responseHelp, nil
 }
 
 func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {

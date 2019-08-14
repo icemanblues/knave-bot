@@ -8,52 +8,56 @@ import (
 	"github.com/icemanblues/knave-bot/slack"
 )
 
+// Command Examples
+
 const cmdMe = "/karma me"
 const cmdStatus = "/karma status @user"
 const cmdAdd = "/karma ++ @user"
 const cmdSub = "/karma -- @user"
 const cmdHelp = "/karma help"
 
-func helpResponse(msg string) *slack.Response {
-	return &slack.Response{
-		ResponseType: slack.ResponseType.Ephemeral,
-		Text:         msg,
-		Attachments: []slack.Attachments{
-			{
-				Fallback: "*Help* Helpful information on how to manage karma.",
-				Title:    "Helpful information on how to manage karma.",
-				Text:     "Below are the sub-commands:",
-				Fields: []slack.Field{
-					{
-						Title: cmdMe,
-						Value: "Return your karma.",
-						Short: true,
-					},
-					{
-						Title: cmdStatus,
-						Value: "Provide a @user and return their karma.",
-						Short: true,
-					},
-					{
-						Title: cmdAdd,
-						Value: "Provide a @user and increase their karma. Optionally, pass a quantity of karma to give.",
-						Short: true,
-					},
-					{
-						Title: cmdSub,
-						Value: "Provide a @user and decrease their karma. Optionally, pass a quantity of karma to take.",
-						Short: true,
-					},
-					{
-						Title: cmdHelp,
-						Value: "This helpful dialogue. You're welcome!",
-						Short: true,
-					},
+// Slack Reponses
+
+var responseHelp = &slack.Response{
+	ResponseType: slack.ResponseType.Ephemeral,
+	Text:         "",
+	Attachments: []slack.Attachments{
+		{
+			Fallback: "*Help* Helpful information on how to manage karma.",
+			Title:    "Helpful information on how to manage karma.",
+			Text:     "Below are the sub-commands:",
+			Fields: []slack.Field{
+				{
+					Title: cmdMe,
+					Value: "Return your karma.",
+					Short: true,
+				},
+				{
+					Title: cmdStatus,
+					Value: "Provide a @user and return their karma.",
+					Short: true,
+				},
+				{
+					Title: cmdAdd,
+					Value: "Provide a @user and increase their karma. Optionally, pass a quantity of karma to give.",
+					Short: true,
+				},
+				{
+					Title: cmdSub,
+					Value: "Provide a @user and decrease their karma. Optionally, pass a quantity of karma to take.",
+					Short: true,
+				},
+				{
+					Title: cmdHelp,
+					Value: "This helpful dialogue. You're welcome!",
+					Short: true,
 				},
 			},
 		},
-	}
+	},
 }
+
+// Re-usable string constants for crafting messages
 
 const msgMissingName = "I need to know whose karma to retrieve."
 const msgNoOp = "Don't waste my time. For shame!"
