@@ -32,14 +32,14 @@ func main() {
 	}
 
 	// create databinders
-	kdb := karma.NewKdb(db)
+	dao := karma.NewDao(db)
 
 	// create processors
-	karmaProc := karma.NewProcessor(kdb)
+	karmaProc := karma.NewProcessor(dao)
 
 	// create handlers
 	knave := knave.NewHandler()
-	karma := karma.NewHandler(karmaProc, kdb)
+	karma := karma.NewHandler(karmaProc, dao)
 
 	// create gin router
 	gin.SetMode(gin.ReleaseMode)

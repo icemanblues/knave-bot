@@ -20,8 +20,8 @@ type SQLiteDAO struct {
 }
 
 // GetKarma returns the karma value for the user in a given team
-func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
-	row := kdb.db.QueryRow(`
+func (dao *SQLiteDAO) GetKarma(team, user string) (int, error) {
+	row := dao.db.QueryRow(`
 		SELECT k.karma
 		FROM   karma k
 		WHERE  k.team = ?
@@ -39,8 +39,8 @@ func (kdb *SQLiteDAO) GetKarma(team, user string) (int, error) {
 }
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
-func (kdb *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
-	_, err := kdb.db.Exec(`
+func (dao *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
+	_, err := dao.db.Exec(`
 		INSERT INTO karma
 		(team, user, karma, created_at, updated_at)
 		VALUES
@@ -54,12 +54,12 @@ func (kdb *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error
 		return 0, err
 	}
 
-	return kdb.GetKarma(workspace, user)
+	return dao.GetKarma(workspace, user)
 }
 
 // DeleteKarma resets all karma for a given user in a given team to zer0
-func (kdb *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
-	_, err := kdb.db.Exec(`
+func (dao *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
+	_, err := dao.db.Exec(`
 		DELETE FROM karma
 		WHERE  team = ?
 		AND	   user = ?;
@@ -71,7 +71,7 @@ func (kdb *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
 	return 0, nil
 }
 
-// NewKdb factory method
-func NewKdb(db *sql.DB) *SQLiteDAO {
+// NewDao factory method
+func NewDao(db *sql.DB) *SQLiteDAO {
 	return &SQLiteDAO{db}
 }

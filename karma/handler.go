@@ -20,16 +20,16 @@ type Handler interface {
 
 // SQLiteHandler Karma Handler implementation using sqlite
 type SQLiteHandler struct {
-	kProc Processor
-	kdb   DAO
+	proc Processor
+	dao  DAO
 }
 
 // GetKarma handler method to read the current karma for an individual
-func (lkh *SQLiteHandler) GetKarma(c *gin.Context) {
+func (h *SQLiteHandler) GetKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
-	k, err := lkh.kdb.GetKarma(team, user)
+	k, err := h.dao.GetKarma(team, user)
 	if err != nil {
 		log.Error("Unable to look up karma.", team, user, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
@@ -39,7 +39,7 @@ func (lkh *SQLiteHandler) GetKarma(c *gin.Context) {
 }
 
 // AddKarma handler method to add (or subtract) karma from an individual
-func (lkh *SQLiteHandler) AddKarma(c *gin.Context) {
+func (h *SQLiteHandler) AddKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -51,7 +51,7 @@ func (lkh *SQLiteHandler) AddKarma(c *gin.Context) {
 		return
 	}
 
-	k, err := lkh.kdb.UpdateKarma(team, user, delta)
+	k, err := h.dao.UpdateKarma(team, user, delta)
 	if err != nil {
 		log.Error("Unable to add or remove karma.", team, user, delta, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
@@ -60,11 +60,11 @@ func (lkh *SQLiteHandler) AddKarma(c *gin.Context) {
 }
 
 // DelKarma handler method to delete (reset) karma to zer0
-func (lkh *SQLiteHandler) DelKarma(c *gin.Context) {
+func (h *SQLiteHandler) DelKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
-	k, err := lkh.kdb.DeleteKarma(team, user)
+	k, err := h.dao.DeleteKarma(team, user)
 	if err != nil {
 		log.Error("Unable to reset karma.", team, user, err)
 		c.String(500, "I'm sorry, we are not able to do that right now")
@@ -74,7 +74,7 @@ func (lkh *SQLiteHandler) DelKarma(c *gin.Context) {
 }
 
 // SlashKarma handler method for the `/karma` slash-command
-func (lkh *SQLiteHandler) SlashKarma(c *gin.Context) {
+func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 	data := &slack.CommandData{
 		Command:      c.PostForm("command"),
 		Text:         c.PostForm("text"),
@@ -85,7 +85,7 @@ func (lkh *SQLiteHandler) SlashKarma(c *gin.Context) {
 		UserID:       c.PostForm("user_id"),
 	}
 
-	response, err := lkh.kProc.Process(data)
+	response, err := h.proc.Process(data)
 	if err != nil {
 		log.Error("Could not process a slack slash command.", data, err)
 		response = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
@@ -95,9 +95,9 @@ func (lkh *SQLiteHandler) SlashKarma(c *gin.Context) {
 }
 
 // NewHandler factory method
-func NewHandler(kProc Processor, kdb DAO) *SQLiteHandler {
+func NewHandler(proc Processor, dao DAO) *SQLiteHandler {
 	return &SQLiteHandler{
-		kProc: kProc,
-		kdb:   kdb,
+		proc: proc,
+		dao:  dao,
 	}
 }

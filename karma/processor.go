@@ -23,12 +23,12 @@ type Processor interface {
 
 // SQLiteProcessor an implementation of KarmaProcessor that uses SQLite
 type SQLiteProcessor struct {
-	kdb DAO
+	dao DAO
 }
 
 // NewProcessor factory method
-func NewProcessor(kdb DAO) *SQLiteProcessor {
-	return &SQLiteProcessor{kdb}
+func NewProcessor(dao DAO) *SQLiteProcessor {
+	return &SQLiteProcessor{dao}
 }
 
 // Process handles Karma processing from slack API
@@ -99,7 +99,7 @@ func (p SQLiteProcessor) help() (*slack.Response, error) {
 }
 
 func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
-	k, err := p.kdb.GetKarma(team, userID)
+	k, err := p.dao.GetKarma(team, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Res
 		return slack.DirectResponse(msgInvalidUser, cmdStatus), nil
 	}
 
-	k, err := p.kdb.GetKarma(team, target)
+	k, err := p.dao.GetKarma(team, target)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Respon
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
-	k, err := p.kdb.UpdateKarma(team, target, delta)
+	k, err := p.dao.UpdateKarma(team, target, delta)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.R
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
-	k, err := p.kdb.UpdateKarma(team, target, -delta)
+	k, err := p.dao.UpdateKarma(team, target, -delta)
 	if err != nil {
 		return nil, err
 	}
