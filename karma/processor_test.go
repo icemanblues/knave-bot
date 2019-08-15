@@ -1,8 +1,10 @@
 package karma
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/icemanblues/knave-bot/slack"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -165,18 +167,253 @@ func TestParseArgUser(t *testing.T) {
 	}
 }
 
-func TestMe(t *testing.T) {
+// HappyDao a mock DAO that will always pass with the provided values
+type HappyDao struct{}
 
+func (d HappyDao) GetKarma(team, user string) (int, error) {
+	return 5, nil
+}
+func (d HappyDao) UpdateKarma(team, user string, delta int) (int, error) {
+	return delta + 1, nil
+}
+func (d HappyDao) DeleteKarma(team, user string) (int, error) {
+	return 0, nil
 }
 
-func TestStatus(t *testing.T) {
+// SadDao a mock DAO that will always fail and error
+type SadDao struct{}
 
+func (d SadDao) GetKarma(team, user string) (int, error) {
+	return 0, errors.New("GetKarma")
+}
+func (d SadDao) UpdateKarma(team, user string, delta int) (int, error) {
+	return 0, errors.New("UpdateKarma")
+}
+func (d SadDao) DeleteKarma(team, user string) (int, error) {
+	return 0, errors.New("DeleteKarma")
 }
 
-func TestAdd(t *testing.T) {
-
+func happyProcessor() *SQLiteProcessor {
+	return NewProcessor(HappyDao{})
 }
 
-func TestSubtract(t *testing.T) {
+func sadProcessor() *SQLiteProcessor {
+	return NewProcessor(SadDao{})
+}
 
+func command(text string) *slack.CommandData {
+	return &slack.CommandData{
+		Command: "karma",
+		UserID:  "UCALLER",
+		Text:    text,
+	}
+}
+
+func TestProcess(t *testing.T) {
+	testcases := []struct {
+		name         string
+		command      *slack.CommandData
+		responseType string
+		text         string
+		attach       bool
+	}{
+		// STATUS
+		{
+			name:         "status",
+			command:      command("status <@USER>"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> has requested karma total for <@USER>.<@USER> has 5 karma.",
+		},
+		{
+			name:         "status no user",
+			command:      command("status"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgMissingName,
+		},
+		{
+			name:         "status malformed user",
+			command:      command("status blah"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgInvalidUser,
+		},
+		// ME
+		{
+			name:         "me",
+			command:      command("me"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         "<@UCALLER> has 5 karma.",
+		},
+		// ADD
+		{
+			name:         "++",
+			command:      command("++ <@USER>"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
+		},
+		{
+			name:         "++ quantity",
+			command:      command("++ <@USER> 3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
+		},
+		{
+			name:         "++ quantity out-of-bounds",
+			command:      command("++ <@USER> 9000"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgDeltaLimit,
+		},
+		{
+			name:         "++ quantity message",
+			command:      command("++ <@USER> thanks you so much"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
+		},
+		{
+			name:         "++ quantity negative",
+			command:      command("++ <@USER> -2"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgAddCantRemove,
+		},
+		{
+			name:         "++ quantity zero",
+			command:      command("++ <@USER> 0"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgNoOp,
+		},
+		{
+			name:         "++ self target",
+			command:      command("++ <@UCALLER> 5"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgAddSelfTarget,
+		},
+		{
+			name:         "++ missing target",
+			command:      command("++"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgAddMissingTarget,
+		},
+		{
+			name:         "++ malformed target",
+			command:      command("++ yikes"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgInvalidUser,
+		},
+		// SUBTRACT
+		{
+			name:         "--",
+			command:      command("-- <@USER>"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 1 karma from <@USER>. <@USER> has 0 karma.",
+		},
+		{
+			name:         "-- quantity",
+			command:      command("-- <@USER> 3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+		},
+		{
+			name:         "-- quantity out-of-bounds",
+			command:      command("-- <@USER> 9000"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgDeltaLimit,
+		},
+		{
+			name:         "-- quantity message",
+			command:      command("-- <@USER> be better next time"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 1 karma from <@USER>. <@USER> has 0 karma.",
+		},
+		{
+			name:         "-- quantity negative",
+			command:      command("-- <@USER> -1"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgSubtractCantAdd,
+		},
+		{
+			name:         "-- quantity zero",
+			command:      command("-- <@USER> 0"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgNoOp,
+		},
+		{
+			name:         "-- self target",
+			command:      command("-- <@UCALLER>"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgSubtractSelfTarget,
+		},
+		{
+			name:         "-- missing target",
+			command:      command("--"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgSubtractMissingTarget,
+		},
+		{
+			name:         "-- malformed target",
+			command:      command("-- yikes"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgInvalidUser,
+		},
+		// HELP
+		{
+			name:         "help",
+			command:      command("help"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         responseHelp.Text,
+		},
+		{
+			name:         "help extra text",
+			command:      command("help extra text"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         responseHelp.Text,
+		},
+		{
+			name:         "help empty",
+			command:      command(""),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         responseHelp.Text,
+		},
+	}
+
+	for _, test := range testcases {
+		p := happyProcessor()
+
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := p.Process(test.command)
+			assert.Nil(t, err)
+			assert.NotNil(t, actual)
+
+			assert.Equal(t, test.responseType, actual.ResponseType)
+			assert.Equal(t, test.text, actual.Text)
+
+			if test.attach {
+				assert.NotNil(t, actual.Attachments)
+				assert.Len(t, actual.Attachments, 1)
+				assert.NotEmpty(t, actual.Attachments[0].Text)
+			}
+		})
+	}
+}
+
+func TestProcessError(t *testing.T) {
+	testcases := []struct {
+		name    string
+		command *slack.CommandData
+	}{
+		{
+			name: "status",
+			command: &slack.CommandData{
+				Text:   "status <@USER>",
+				UserID: "UCALLER",
+			},
+		},
+	}
+
+	for _, test := range testcases {
+		p := sadProcessor()
+		t.Run(test.name, func(t *testing.T) {
+			actual, err := p.Process(test.command)
+			assert.Nil(t, actual)
+			assert.NotNil(t, err)
+		})
+	}
 }
