@@ -73,6 +73,8 @@ func (h *SQLiteHandler) DelKarma(c *gin.Context) {
 	c.String(200, "%v", k)
 }
 
+var responseUnknownError = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
+
 // SlashKarma handler method for the `/karma` slash-command
 func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 	data := &slack.CommandData{
@@ -88,7 +90,7 @@ func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 	response, err := h.proc.Process(data)
 	if err != nil {
 		log.Error("Could not process a slack slash command.", data, err)
-		response = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
+		response = responseUnknownError
 	}
 
 	c.JSON(200, response)
