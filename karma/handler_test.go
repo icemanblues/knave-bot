@@ -14,7 +14,7 @@ import (
 )
 
 func setup(dao DAO) *gin.Engine {
-	proc := NewProcessor(dao)
+	proc := mockProcessor(dao)
 	h := NewHandler(proc, dao)
 
 	r := gin.Default()
@@ -189,39 +189,58 @@ func TestSlashKarma(t *testing.T) {
 			expected: responseHelp,
 		},
 		{
-			name:     "status",
-			dao:      HappyDao(),
-			form:     makeForm("status <@USER>"),
-			code:     200,
-			expected: nil,
+			name: "me",
+			dao:  HappyDao(),
+			form: makeForm("me"),
+			code: 200,
+			expected: slack.DirectResponse(
+				"<@UCALLER> has 5 karma.",
+				"compliment"),
 		},
 		{
-			name:     "add",
-			dao:      HappyDao(),
-			form:     makeForm("++ <@USER>"),
-			code:     200,
-			expected: nil,
+			name: "status",
+			dao:  HappyDao(),
+			form: makeForm("status <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> has requested karma total for <@USER>. <@USER> has 5 karma.",
+				"compliment"),
 		},
 		{
-			name:     "add 2",
-			dao:      HappyDao(),
-			form:     makeForm("++ <@USER> 2"),
-			code:     200,
-			expected: nil,
+			name: "add",
+			dao:  HappyDao(),
+			form: makeForm("++ <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
+				"compliment"),
 		},
 		{
-			name:     "subtract",
-			dao:      HappyDao(),
-			form:     makeForm("-- <@USER>"),
-			code:     200,
-			expected: nil,
+			name: "add 2",
+			dao:  HappyDao(),
+			form: makeForm("++ <@USER> 2"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is giving 2 karma to <@USER>. <@USER> has 3 karma.",
+				"compliment"),
 		},
 		{
-			name:     "subtract 3",
-			dao:      HappyDao(),
-			form:     makeForm("-- <@USER> 3"),
-			code:     200,
-			expected: nil,
+			name: "subtract",
+			dao:  HappyDao(),
+			form: makeForm("-- <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is taking away 1 karma from <@USER>. <@USER> has 0 karma.",
+				"insult"),
+		},
+		{
+			name: "subtract 3",
+			dao:  HappyDao(),
+			form: makeForm("-- <@USER> 3"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+				"insult"),
 		},
 		// //  SAD
 		{

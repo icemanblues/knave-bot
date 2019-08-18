@@ -187,7 +187,7 @@ func TestProcess(t *testing.T) {
 			name:         "status",
 			command:      command("status <@USER>"),
 			responseType: slack.ResponseType.InChannel,
-			text:         "<@UCALLER> has requested karma total for <@USER>.<@USER> has 5 karma.",
+			text:         "<@UCALLER> has requested karma total for <@USER>. <@USER> has 5 karma.",
 		},
 		{
 			name:         "status no user",
@@ -340,7 +340,7 @@ func TestProcess(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := NewProcessor(HappyDao())
+		p := mockProcessor(HappyDao())
 
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
@@ -374,7 +374,7 @@ func TestProcessError(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := NewProcessor(SadDao())
+		p := mockProcessor(SadDao())
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
 			assert.Nil(t, actual)

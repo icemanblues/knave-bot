@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
 )
 
@@ -21,18 +22,20 @@ type Processor interface {
 	Process(cd *slack.CommandData) (*slack.Response, error)
 }
 
-// SQLiteProcessor an implementation of KarmaProcessor that uses SQLite
-type SQLiteProcessor struct {
-	dao DAO
+// SlackProcessor an implementation of KarmaProcessor that uses SQLite
+type SlackProcessor struct {
+	dao        DAO
+	insult     shakespeare.Generator
+	compliment shakespeare.Generator
 }
 
 // NewProcessor factory method
-func NewProcessor(dao DAO) *SQLiteProcessor {
-	return &SQLiteProcessor{dao}
+func NewProcessor(dao DAO, insult, compliment shakespeare.Generator) *SlackProcessor {
+	return &SlackProcessor{dao, insult, compliment}
 }
 
 // Process handles Karma processing from slack API
-func (p SQLiteProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
+func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	if len(c.Text) == 0 {
 		return p.help()
 	}
@@ -94,11 +97,11 @@ func parseArgUser(words []string, idx int) (string, bool) {
 	return slack.IsSlackUser(s)
 }
 
-func (p SQLiteProcessor) help() (*slack.Response, error) {
+func (p SlackProcessor) help() (*slack.Response, error) {
 	return responseHelp, nil
 }
 
-func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
+func (p SlackProcessor) me(team, userID string) (*slack.Response, error) {
 	k, err := p.dao.GetKarma(team, userID)
 	if err != nil {
 		return nil, err
@@ -106,11 +109,11 @@ func (p SQLiteProcessor) me(team, userID string) (*slack.Response, error) {
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	UserStatus(userID, k, msg)
-	Salutation(k, att)
+	p.Salutation(k, att)
 	return slack.DirectResponse(msg.String(), att.String()), nil
 }
 
-func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) status(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgMissingName, cmdStatus), nil
@@ -127,13 +130,13 @@ func (p SQLiteProcessor) status(team, callee string, words []string) (*slack.Res
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> has requested karma total for <@%s>.", callee, target))
+	msg.WriteString(fmt.Sprintf("<@%s> has requested karma total for <@%s>. ", callee, target))
 	UserStatus(target, k, msg)
-	Salutation(k, att)
+	p.Salutation(k, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) add(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgAddMissingTarget, cmdAdd), nil
@@ -167,11 +170,11 @@ func (p SQLiteProcessor) add(team, callee string, words []string) (*slack.Respon
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	msg.WriteString(fmt.Sprintf("<@%s> is giving %v karma to <@%s>. ", callee, delta, target))
 	UserStatus(target, k, msg)
-	Salutation(delta, att)
+	p.Salutation(delta, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgSubtractMissingTarget, cmdSub), nil
@@ -206,6 +209,6 @@ func (p SQLiteProcessor) subtract(team, callee string, words []string) (*slack.R
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	msg.WriteString(fmt.Sprintf("<@%s> is taking away %v karma from <@%s>. ", callee, delta, target))
 	UserStatus(target, k, msg)
-	Salutation(-delta, att)
+	p.Salutation(-delta, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }

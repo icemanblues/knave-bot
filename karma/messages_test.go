@@ -48,39 +48,32 @@ func TestSalutation(t *testing.T) {
 	testcases := []struct {
 		name     string
 		karma    int
-		length   int
 		expected string
 	}{
 		{
 			name:     "positive karma compliment",
 			karma:    5,
-			length:   4,
-			expected: "",
+			expected: "compliment",
 		},
 		{
 			name:     "negative karma insult",
 			karma:    -1,
-			length:   4,
-			expected: "",
+			expected: "insult",
 		},
 		{
 			name:     "no karma silence",
 			karma:    0,
-			length:   0,
 			expected: "",
 		},
 	}
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
+			p := mockProcessor(HappyDao())
 			sb := &strings.Builder{}
-			Salutation(test.karma, sb)
+			p.Salutation(test.karma, sb)
 			actual := sb.String()
-			// FIXME: Since I don't know how to detect an insult from a compliment, this is silly
-			// Prolly should inject the shakespeare.Generators for this
-			if actual != test.expected && len(actual) < test.length {
-				t.Error()
-			}
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }

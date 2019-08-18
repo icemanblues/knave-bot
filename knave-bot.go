@@ -35,7 +35,7 @@ func main() {
 	dao := karma.NewDao(db)
 
 	// create processors
-	karmaProc := karma.NewProcessor(dao)
+	karmaProc := karma.NewProcessor(dao, shakespeare.InsultGenerator, shakespeare.ComplimentGenerator)
 
 	// create handlers
 	knave := knave.NewHandler()

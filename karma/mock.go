@@ -1,6 +1,10 @@
 package karma
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/icemanblues/knave-bot/shakespeare"
+)
 
 // MockDAO a mock dao for karma whose mock functions can be monkeypatched
 type MockDAO struct {
@@ -52,4 +56,10 @@ func SadDao() *MockDAO {
 			return 0, errors.New("DeleteKarmaMock")
 		},
 	}
+}
+
+func mockProcessor(dao DAO) *SlackProcessor {
+	return NewProcessor(dao,
+		shakespeare.New("insult", "", nil),
+		shakespeare.New("compliment", "", nil))
 }

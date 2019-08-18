@@ -7,19 +7,27 @@ import (
 )
 
 // Generator generates sentences following a formula.
-type Generator struct {
+type Generator interface {
+	Sentence() string
+}
+
+// FormulaGenerator generates sentences following a formula.
+// prefix +
+// random element from column A, column B, ... column N +
+// postfix
+type FormulaGenerator struct {
 	prefix  string
 	columns [][]string
 	postfix string
 }
 
 // Sentence the result of this generator's formula
-func (g Generator) Sentence() string {
+func (g FormulaGenerator) Sentence() string {
 	return g.Generate(" ")
 }
 
 // Generate follows the formula using the delim
-func (g Generator) Generate(delim string) string {
+func (g FormulaGenerator) Generate(delim string) string {
 	builder := strings.Builder{}
 	if g.prefix != "" {
 		builder.WriteString(g.prefix)
@@ -44,9 +52,9 @@ func (g Generator) Generate(delim string) string {
 	return builder.String()
 }
 
-// New constructs a Generator
-func New(pre, post string, cols [][]string) *Generator {
-	return &Generator{
+// New constructs a FormulaGenerator
+func New(pre, post string, cols [][]string) *FormulaGenerator {
+	return &FormulaGenerator{
 		prefix:  pre,
 		postfix: post,
 		columns: cols,

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
 )
 
@@ -78,14 +77,14 @@ func UserStatus(userID string, k int, sb *strings.Builder) {
 }
 
 // Salutation appends a Salutation (insult or compliment)
-func Salutation(k int, sb *strings.Builder) {
+func (p SlackProcessor) Salutation(k int, sb *strings.Builder) {
 	if k > 0 {
-		sb.WriteString(shakespeare.Compliment())
+		sb.WriteString(p.compliment.Sentence())
 		return
 	}
 	if k == 0 {
 		return
 	}
 
-	sb.WriteString(shakespeare.Insult())
+	sb.WriteString(p.insult.Sentence())
 }
