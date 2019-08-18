@@ -31,8 +31,9 @@ func (h *SQLiteHandler) GetKarma(c *gin.Context) {
 
 	k, err := h.dao.GetKarma(team, user)
 	if err != nil {
-		log.Error("Unable to look up karma.", team, user, err)
-		c.String(500, "I'm sorry, we are not able to do that right now")
+		log.Errorf("Unable to lookup karma. %v %v %v", team, user, err)
+		c.String(500, err.Error())
+		return
 	}
 
 	c.String(200, "%v", k)
@@ -46,15 +47,16 @@ func (h *SQLiteHandler) AddKarma(c *gin.Context) {
 	d := c.Query("delta")
 	delta, err := strconv.Atoi(d)
 	if err != nil {
-		log.Error("Not a valid integer.", team, user, delta, err)
+		log.Errorf("Not a valid integer. %v %v %v %v", team, user, delta, err)
 		c.String(400, "Please pass a valid integer. %v", d)
 		return
 	}
 
 	k, err := h.dao.UpdateKarma(team, user, delta)
 	if err != nil {
-		log.Error("Unable to add or remove karma.", team, user, delta, err)
-		c.String(500, "I'm sorry, we are not able to do that right now")
+		log.Errorf("Unable to add or remove karma. %v %v %v %v", team, user, delta, err)
+		c.String(500, err.Error())
+		return
 	}
 	c.String(200, "%v", k)
 }
@@ -66,8 +68,9 @@ func (h *SQLiteHandler) DelKarma(c *gin.Context) {
 
 	k, err := h.dao.DeleteKarma(team, user)
 	if err != nil {
-		log.Error("Unable to reset karma.", team, user, err)
-		c.String(500, "I'm sorry, we are not able to do that right now")
+		log.Errorf("Unable to reset karma. %v %v %v", team, user, err)
+		c.String(500, err.Error())
+		return
 	}
 
 	c.String(200, "%v", k)
@@ -89,7 +92,7 @@ func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 
 	response, err := h.proc.Process(data)
 	if err != nil {
-		log.Error("Could not process a slack slash command.", data, err)
+		log.Errorf("Could not process a slack slash command. %v %v", data, err)
 		response = responseUnknownError
 	}
 

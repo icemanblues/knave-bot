@@ -2,9 +2,9 @@ package karma
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -13,9 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setup(h *SQLiteHandler) *gin.Engine {
-	r := gin.Default()
+func setup(dao DAO) *gin.Engine {
+	proc := NewProcessor(dao)
+	h := NewHandler(proc, dao)
 
+	r := gin.Default()
 	r.GET("/karma/:team/:user", h.GetKarma)
 	r.PUT("/karma/:team/:user", h.AddKarma)
 	r.DELETE("/karma/:team/:user", h.DelKarma)
@@ -24,68 +26,236 @@ func setup(h *SQLiteHandler) *gin.Engine {
 	return r
 }
 
-// MockDAO a mock dao for karma whose mock functions can be monkeypatched
-type MockDAO struct {
-	GetKarmaMock    func(team, user string) (int, error)
-	UpdateKarmaMock func(team, user string, delta int) (int, error)
-	DeleteKarmaMock func(team, user string) (int, error)
-}
-
-func (m MockDAO) GetKarma(team, user string) (int, error) {
-	return m.GetKarmaMock(team, user)
-}
-
-func (m MockDAO) UpdateKarma(team, user string, delta int) (int, error) {
-	return m.UpdateKarmaMock(team, user, delta)
-}
-
-func (m MockDAO) DeleteKarma(team, user string) (int, error) {
-	return m.DeleteKarmaMock(team, user)
-}
-
-func happyDao() *MockDAO {
-	return &MockDAO{
-		GetKarmaMock: func(team, user string) (int, error) {
-			return 10, nil
+func TestGetKarma(t *testing.T) {
+	testcases := []struct {
+		name     string
+		dao      DAO
+		code     int
+		expected string
+	}{
+		{
+			name:     "GetKarma",
+			dao:      HappyDao(),
+			code:     200,
+			expected: "5",
 		},
-		UpdateKarmaMock: func(team, user string, delta int) (int, error) {
-			return delta + 1, nil
+		{
+			name:     "GetKarma error",
+			dao:      SadDao(),
+			code:     500,
+			expected: "GetKarmaMock",
 		},
-		DeleteKarmaMock: func(team, user string) (int, error) {
-			return 0, nil
-		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			// setup
+			r := setup(test.dao)
+
+			// undertest
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/karma/nycfc/davidvilla", nil)
+			r.ServeHTTP(w, req)
+
+			// assert
+			assert.Equal(t, test.code, w.Code)
+			assert.Equal(t, test.expected, w.Body.String())
+		})
 	}
 }
 
-func sadDao() *MockDAO {
-	return &MockDAO{
-		GetKarmaMock: func(team, user string) (int, error) {
-			return 0, errors.New("GetKarmaMock")
+func TestAddKarma(t *testing.T) {
+	testcases := []struct {
+		name     string
+		dao      DAO
+		delta    string
+		code     int
+		expected string
+	}{
+		{
+			name:     "AddKarma",
+			dao:      HappyDao(),
+			delta:    "5",
+			code:     200,
+			expected: "6",
 		},
-		UpdateKarmaMock: func(team, user string, delta int) (int, error) {
-			return 0, errors.New("UpdateKarmaMock")
+		{
+			name:     "AddKarma malformed delta",
+			dao:      HappyDao(),
+			delta:    "Not-A-Number",
+			code:     400,
+			expected: "Please pass a valid integer. Not-A-Number",
 		},
-		DeleteKarmaMock: func(team, user string) (int, error) {
-			return 0, errors.New("DeleteKarmaMock")
+		{
+			name:     "AddKarma negative delta",
+			dao:      HappyDao(),
+			delta:    "-2",
+			code:     200,
+			expected: "-1",
 		},
+		{
+			name:     "AddKarma error",
+			dao:      SadDao(),
+			delta:    "5",
+			code:     500,
+			expected: "UpdateKarmaMock",
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			// setup
+			r := setup(test.dao)
+
+			// undertest
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("PUT", "/karma/nycfc/davidvilla?delta="+test.delta, nil)
+			r.ServeHTTP(w, req)
+
+			// assert
+			assert.Equal(t, test.code, w.Code)
+			assert.Equal(t, test.expected, w.Body.String())
+		})
+	}
+}
+
+func TestDelKarma(t *testing.T) {
+	testcases := []struct {
+		name     string
+		dao      DAO
+		code     int
+		expected string
+	}{
+		{
+			name:     "DeleteKarma",
+			dao:      HappyDao(),
+			code:     200,
+			expected: "0",
+		},
+		{
+			name:     "DeleteKarma error",
+			dao:      SadDao(),
+			code:     500,
+			expected: "DeleteKarmaMock",
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			// setup
+			r := setup(test.dao)
+
+			// undertest
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("DELETE", "/karma/nycfc/davidvilla", nil)
+			r.ServeHTTP(w, req)
+
+			// assert
+			assert.Equal(t, test.code, w.Code)
+			assert.Equal(t, test.expected, w.Body.String())
+		})
 	}
 }
 
 func TestSlashKarma(t *testing.T) {
-	dao := happyDao()
-	proc := NewProcessor(dao)
-	h := NewHandler(proc, dao)
-	r := setup(h)
+	makeForm := func(text string) url.Values {
+		return url.Values{
+			"text":    []string{text},
+			"user_id": []string{"UCALLER"},
+			"team_id": []string{"nycfc"},
+		}
+	}
 
 	testcases := []struct {
 		name     string
-		form     string
+		dao      DAO
+		form     url.Values
 		code     int
 		expected *slack.Response
 	}{
+		// // HAPPY
+		{
+			name:     "no text",
+			dao:      HappyDao(),
+			form:     makeForm(""),
+			code:     200,
+			expected: responseHelp,
+		},
 		{
 			name:     "help",
-			form:     "",
+			dao:      HappyDao(),
+			form:     makeForm("help"),
+			code:     200,
+			expected: responseHelp,
+		},
+		{
+			name:     "status",
+			dao:      HappyDao(),
+			form:     makeForm("status <@USER>"),
+			code:     200,
+			expected: nil,
+		},
+		{
+			name:     "add",
+			dao:      HappyDao(),
+			form:     makeForm("++ <@USER>"),
+			code:     200,
+			expected: nil,
+		},
+		{
+			name:     "add 2",
+			dao:      HappyDao(),
+			form:     makeForm("++ <@USER> 2"),
+			code:     200,
+			expected: nil,
+		},
+		{
+			name:     "subtract",
+			dao:      HappyDao(),
+			form:     makeForm("-- <@USER>"),
+			code:     200,
+			expected: nil,
+		},
+		{
+			name:     "subtract 3",
+			dao:      HappyDao(),
+			form:     makeForm("-- <@USER> 3"),
+			code:     200,
+			expected: nil,
+		},
+		// //  SAD
+		{
+			name:     "error me",
+			dao:      SadDao(),
+			form:     makeForm("me"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+		{
+			name:     "error status",
+			dao:      SadDao(),
+			form:     makeForm("status <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+		{
+			name:     "error add",
+			dao:      SadDao(),
+			form:     makeForm("++ <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+		{
+			name:     "error subtract",
+			dao:      SadDao(),
+			form:     makeForm("-- <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+		{
+			name:     "error help",
+			dao:      SadDao(),
+			form:     makeForm("help"),
 			code:     200,
 			expected: responseHelp,
 		},
@@ -93,69 +263,23 @@ func TestSlashKarma(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
+			// setup
+			r := setup(test.dao)
+
+			// undertest
 			w := httptest.NewRecorder()
-			form := strings.NewReader(test.form)
-			req, _ := http.NewRequest("POST", "/slash/karma", form)
-			r.ServeHTTP(w, req)
-
-			var actual slack.Response
-			err := json.Unmarshal(w.Body.Bytes(), &actual)
-			assert.Nil(t, err)
-
-			assert.Equal(t, 200, w.Code)
-			assert.Equal(t, test.expected, &actual)
-		})
-	}
-}
-
-func TestSlashKarmaError(t *testing.T) {
-	dao := sadDao()
-	proc := NewProcessor(dao)
-	h := NewHandler(proc, dao)
-	r := setup(h)
-
-	testcases := []struct {
-		name     string
-		form     string
-		code     int
-		expected *slack.Response
-	}{
-		{
-			name:     "error status",
-			form:     "text=me&user_id=UCALLER&team_id=nycfc",
-			code:     200,
-			expected: responseUnknownError,
-		},
-	}
-
-	for _, test := range testcases {
-		t.Run(test.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			form := strings.NewReader(test.form)
-			req, _ := http.NewRequest("POST", "/slash/karma", form)
+			body := strings.NewReader(test.form.Encode())
+			req, _ := http.NewRequest("POST", "/slash/karma", body)
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			r.ServeHTTP(w, req)
 
 			var actual slack.Response
 			err := json.Unmarshal(w.Body.Bytes(), &actual)
-			assert.Nil(t, err)
 
-			assert.Equal(t, 200, w.Code)
+			// assert
+			assert.Nil(t, err)
+			assert.Equal(t, test.code, w.Code)
 			assert.Equal(t, test.expected, &actual)
 		})
 	}
-}
-
-func TestGetKarma(t *testing.T) {
-	dao := happyDao()
-	proc := NewProcessor(dao)
-	h := NewHandler(proc, dao)
-	r := setup(h)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/karma/nycfc/davidvilla", nil)
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, 200, w.Code)
-	assert.Equal(t, "10", w.Body.String())
 }

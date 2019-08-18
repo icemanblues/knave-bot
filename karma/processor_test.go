@@ -1,7 +1,6 @@
 package karma
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/icemanblues/knave-bot/slack"
@@ -165,40 +164,6 @@ func TestParseArgUser(t *testing.T) {
 			assert.Equal(t, test.ok, ok)
 		})
 	}
-}
-
-// HappyDao a mock DAO that will always pass with the provided values
-type HappyDao struct{}
-
-func (d HappyDao) GetKarma(team, user string) (int, error) {
-	return 5, nil
-}
-func (d HappyDao) UpdateKarma(team, user string, delta int) (int, error) {
-	return delta + 1, nil
-}
-func (d HappyDao) DeleteKarma(team, user string) (int, error) {
-	return 0, nil
-}
-
-// SadDao a mock DAO that will always fail and error
-type SadDao struct{}
-
-func (d SadDao) GetKarma(team, user string) (int, error) {
-	return 0, errors.New("GetKarma")
-}
-func (d SadDao) UpdateKarma(team, user string, delta int) (int, error) {
-	return 0, errors.New("UpdateKarma")
-}
-func (d SadDao) DeleteKarma(team, user string) (int, error) {
-	return 0, errors.New("DeleteKarma")
-}
-
-func happyProcessor() *SQLiteProcessor {
-	return NewProcessor(HappyDao{})
-}
-
-func sadProcessor() *SQLiteProcessor {
-	return NewProcessor(SadDao{})
 }
 
 func command(text string) *slack.CommandData {
@@ -375,7 +340,7 @@ func TestProcess(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := happyProcessor()
+		p := NewProcessor(HappyDao())
 
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
@@ -409,7 +374,7 @@ func TestProcessError(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := sadProcessor()
+		p := NewProcessor(SadDao())
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
 			assert.Nil(t, actual)
