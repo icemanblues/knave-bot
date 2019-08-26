@@ -12,16 +12,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func main() {
-	// initialize logger
+func logger() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 	log.SetReportCaller(true) // This could have performance impact
+}
 
-	log.Infof("Insult: %v", shakespeare.Insult())
+// InitKarma initializes the components and wires them together, for Karma and Knave bot
+func initKarma(insult, compliment shakespeare.Generator, dao karma.DAO) (knave.Handler, karma.Handler) {
+	karmaProc := karma.NewProcessor(dao, insult, compliment)
+
+	knave := knave.NewHandler(insult, compliment)
+	karma := karma.NewHandler(karmaProc, dao)
+
+	return knave, karma
+}
+
+func initGin() *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
+	r.Use(cors.Default())
+
+	return r
+}
+
+func main() {
+	// initialize logger
+	logger()
+	log.Infof("Insult    : %v", shakespeare.Insult())
 	log.Infof("Compliment: %v", shakespeare.Compliment())
 
 	// initialize database
@@ -30,23 +51,10 @@ func main() {
 		log.Panic("Unable to initialize the database", err)
 		panic(err)
 	}
-
-	// create databinders
 	dao := karma.NewDao(db)
 
-	// create processors
-	karmaProc := karma.NewProcessor(dao, shakespeare.InsultGenerator, shakespeare.ComplimentGenerator)
-
-	// create handlers
-	knave := knave.NewHandler(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator)
-	karma := karma.NewHandler(karmaProc, dao)
-
-	// create gin router
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
-	r.Use(cors.Default())
-
-	// map the routes to the handlers
+	knave, karma := initKarma(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator, dao)
+	r := initGin()
 	BindRoutes(r, knave, karma)
 
 	// listen and serve on 0.0.0.0:8080
