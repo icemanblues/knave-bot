@@ -1,4 +1,4 @@
-package karma
+package karma_test
 
 import (
 	"database/sql"
