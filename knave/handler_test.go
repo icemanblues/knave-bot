@@ -4,15 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
 	"github.com/stretchr/testify/assert"
 )
 
-func setup(h *GinHandler) *gin.Engine {
+func setupHandler() *GinHandler {
+	return NewHandler(shakespeare.New("insult", "", nil),
+		shakespeare.New("compliment", "", nil))
+}
+
+func setupGin(h *GinHandler) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/insult", h.Insult)
@@ -22,9 +27,33 @@ func setup(h *GinHandler) *gin.Engine {
 	return r
 }
 
+func TestInsult(t *testing.T) {
+	h := setupHandler()
+	r := setupGin(h)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/insult", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "insult", w.Body.String())
+}
+
+func TestCompliment(t *testing.T) {
+	h := setupHandler()
+	r := setupGin(h)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/compliment", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "compliment", w.Body.String())
+}
+
 func TestSlashKnave(t *testing.T) {
-	h := NewHandler()
-	r := setup(h)
+	h := setupHandler()
+	r := setupGin(h)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/slash/knave", nil)
@@ -37,5 +66,5 @@ func TestSlashKnave(t *testing.T) {
 
 	assert.Equal(t, slack.ResponseType.InChannel, body.ResponseType)
 	assert.True(t, len(body.Text) > 4)
-	assert.True(t, strings.HasPrefix(body.Text, "Thou"))
+	assert.Equal(t, "insult", body.Text)
 }

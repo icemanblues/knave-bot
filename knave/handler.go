@@ -14,27 +14,33 @@ type Handler interface {
 }
 
 // GinHandler an implementation using Gin
-type GinHandler struct{}
+type GinHandler struct {
+	insult     shakespeare.Generator
+	compliment shakespeare.Generator
+}
 
 // Insult handler function to generate an insult
 func (g *GinHandler) Insult(c *gin.Context) {
-	c.String(200, "%s", shakespeare.Insult())
+	c.String(200, "%s", g.insult.Sentence())
 }
 
 // Compliment handler function to generate a complement
 func (g *GinHandler) Compliment(c *gin.Context) {
-	c.String(200, "%s", shakespeare.Compliment())
+	c.String(200, "%s", g.compliment.Sentence())
 }
 
 // SlashKnave handler function for slash-command `/knave`
 func (g *GinHandler) SlashKnave(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"text":          shakespeare.Insult(),
+		"text":          g.insult.Sentence(),
 		"response_type": "in_channel",
 	})
 }
 
 // NewHandler factory method
-func NewHandler() *GinHandler {
-	return &GinHandler{}
+func NewHandler(insult, compliment shakespeare.Generator) *GinHandler {
+	return &GinHandler{
+		insult:     insult,
+		compliment: compliment,
+	}
 }

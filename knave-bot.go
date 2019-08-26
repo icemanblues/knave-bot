@@ -38,7 +38,7 @@ func main() {
 	karmaProc := karma.NewProcessor(dao, shakespeare.InsultGenerator, shakespeare.ComplimentGenerator)
 
 	// create handlers
-	knave := knave.NewHandler()
+	knave := knave.NewHandler(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator)
 	karma := karma.NewHandler(karmaProc, dao)
 
 	// create gin router
