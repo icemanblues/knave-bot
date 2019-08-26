@@ -157,129 +157,23 @@ func TestDelKarma(t *testing.T) {
 	}
 }
 
-func TestSlashKarma(t *testing.T) {
-	makeForm := func(text string) url.Values {
-		return url.Values{
-			"text":    []string{text},
-			"user_id": []string{"UCALLER"},
-			"team_id": []string{"nycfc"},
-		}
-	}
+type KarmaTestCase struct {
+	name     string
+	dao      DAO
+	form     url.Values
+	code     int
+	expected *slack.Response
+}
 
-	testcases := []struct {
-		name     string
-		dao      DAO
-		form     url.Values
-		code     int
-		expected *slack.Response
-	}{
-		// // HAPPY
-		{
-			name:     "no text",
-			dao:      HappyDao(),
-			form:     makeForm(""),
-			code:     200,
-			expected: responseHelp,
-		},
-		{
-			name:     "help",
-			dao:      HappyDao(),
-			form:     makeForm("help"),
-			code:     200,
-			expected: responseHelp,
-		},
-		{
-			name: "me",
-			dao:  HappyDao(),
-			form: makeForm("me"),
-			code: 200,
-			expected: slack.DirectResponse(
-				"<@UCALLER> has 5 karma.",
-				"compliment"),
-		},
-		{
-			name: "status",
-			dao:  HappyDao(),
-			form: makeForm("status <@USER>"),
-			code: 200,
-			expected: slack.ChannelAttachmentsResponse(
-				"<@UCALLER> has requested karma total for <@USER>. <@USER> has 5 karma.",
-				"compliment"),
-		},
-		{
-			name: "add",
-			dao:  HappyDao(),
-			form: makeForm("++ <@USER>"),
-			code: 200,
-			expected: slack.ChannelAttachmentsResponse(
-				"<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
-				"compliment"),
-		},
-		{
-			name: "add 2",
-			dao:  HappyDao(),
-			form: makeForm("++ <@USER> 2"),
-			code: 200,
-			expected: slack.ChannelAttachmentsResponse(
-				"<@UCALLER> is giving 2 karma to <@USER>. <@USER> has 3 karma.",
-				"compliment"),
-		},
-		{
-			name: "subtract",
-			dao:  HappyDao(),
-			form: makeForm("-- <@USER>"),
-			code: 200,
-			expected: slack.ChannelAttachmentsResponse(
-				"<@UCALLER> is taking away 1 karma from <@USER>. <@USER> has 0 karma.",
-				"insult"),
-		},
-		{
-			name: "subtract 3",
-			dao:  HappyDao(),
-			form: makeForm("-- <@USER> 3"),
-			code: 200,
-			expected: slack.ChannelAttachmentsResponse(
-				"<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
-				"insult"),
-		},
-		// //  SAD
-		{
-			name:     "error me",
-			dao:      SadDao(),
-			form:     makeForm("me"),
-			code:     200,
-			expected: responseUnknownError,
-		},
-		{
-			name:     "error status",
-			dao:      SadDao(),
-			form:     makeForm("status <@USER>"),
-			code:     200,
-			expected: responseUnknownError,
-		},
-		{
-			name:     "error add",
-			dao:      SadDao(),
-			form:     makeForm("++ <@USER>"),
-			code:     200,
-			expected: responseUnknownError,
-		},
-		{
-			name:     "error subtract",
-			dao:      SadDao(),
-			form:     makeForm("-- <@USER>"),
-			code:     200,
-			expected: responseUnknownError,
-		},
-		{
-			name:     "error help",
-			dao:      SadDao(),
-			form:     makeForm("help"),
-			code:     200,
-			expected: responseHelp,
-		},
+func makeForm(text string) url.Values {
+	return url.Values{
+		"text":    []string{text},
+		"user_id": []string{"UCALLER"},
+		"team_id": []string{"nycfc"},
 	}
+}
 
+func karmaTestRunner(t *testing.T, testcases []KarmaTestCase) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
@@ -301,4 +195,142 @@ func TestSlashKarma(t *testing.T) {
 			assert.Equal(t, test.expected, &actual)
 		})
 	}
+}
+
+func TestHelp(t *testing.T) {
+	testcases := []KarmaTestCase{
+		{
+			name:     "no text",
+			dao:      HappyDao(),
+			form:     makeForm(""),
+			code:     200,
+			expected: responseHelp,
+		},
+		{
+			name:     "help",
+			dao:      HappyDao(),
+			form:     makeForm("help"),
+			code:     200,
+			expected: responseHelp,
+		},
+		{
+			name:     "error help",
+			dao:      SadDao(),
+			form:     makeForm("help"),
+			code:     200,
+			expected: responseHelp,
+		},
+	}
+
+	karmaTestRunner(t, testcases)
+}
+
+func TestStatus(t *testing.T) {
+	testcases := []KarmaTestCase{
+		{
+			name: "status",
+			dao:  HappyDao(),
+			form: makeForm("status <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> has requested karma total for <@USER>. <@USER> has 5 karma.",
+				"compliment"),
+		},
+		{
+			name:     "error status",
+			dao:      SadDao(),
+			form:     makeForm("status <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+	}
+
+	karmaTestRunner(t, testcases)
+}
+
+func TestMe(t *testing.T) {
+	testcases := []KarmaTestCase{
+		{
+			name: "me",
+			dao:  HappyDao(),
+			form: makeForm("me"),
+			code: 200,
+			expected: slack.DirectResponse(
+				"<@UCALLER> has 5 karma.",
+				"compliment"),
+		},
+		{
+			name:     "error me",
+			dao:      SadDao(),
+			form:     makeForm("me"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+	}
+
+	karmaTestRunner(t, testcases)
+}
+
+func TestAdd(t *testing.T) {
+	testcases := []KarmaTestCase{
+		{
+			name: "add",
+			dao:  HappyDao(),
+			form: makeForm("++ <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
+				"compliment"),
+		},
+		{
+			name: "add 2",
+			dao:  HappyDao(),
+			form: makeForm("++ <@USER> 2"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is giving 2 karma to <@USER>. <@USER> has 3 karma.",
+				"compliment"),
+		},
+		{
+			name:     "error add",
+			dao:      SadDao(),
+			form:     makeForm("++ <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+	}
+
+	karmaTestRunner(t, testcases)
+}
+
+func TestSubtract(t *testing.T) {
+	testcases := []KarmaTestCase{
+		{
+			name: "subtract",
+			dao:  HappyDao(),
+			form: makeForm("-- <@USER>"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is taking away 1 karma from <@USER>. <@USER> has 0 karma.",
+				"insult"),
+		},
+		{
+			name: "subtract 3",
+			dao:  HappyDao(),
+			form: makeForm("-- <@USER> 3"),
+			code: 200,
+			expected: slack.ChannelAttachmentsResponse(
+				"<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+				"insult"),
+		},
+		{
+			name:     "error subtract",
+			dao:      SadDao(),
+			form:     makeForm("-- <@USER>"),
+			code:     200,
+			expected: responseUnknownError,
+		},
+	}
+
+	karmaTestRunner(t, testcases)
 }
