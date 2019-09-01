@@ -8,6 +8,21 @@ import (
 	_ "github.com/mattn/go-sqlite3" // sqlite db driver
 )
 
+// InitDB initializes the db and tables that we require
+func InitDB(dataSourceName string) (*sql.DB, error) {
+	db, err := createDB(dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+
+	err = schema(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 func createDB(dataSourceName string) (*sql.DB, error) {
 	// create the directories required for the database file
 	dir := filepath.Dir(dataSourceName)
@@ -26,35 +41,49 @@ func createDB(dataSourceName string) (*sql.DB, error) {
 
 func schema(db *sql.DB) error {
 	// karma table
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS karma (
-			id INTEGER PRIMARY KEY, 
-			team TEXT, 
-			user TEXT,
-			karma INTEGER,
-			created_at TEXT,
-			updated_at TEXT
-		);
-		CREATE UNIQUE INDEX IF NOT EXISTS idx_karma_team_user ON karma (team, user);
-	`)
-	if err != nil {
+	if err := schemaKarma(db); err != nil {
+		return err
+	}
+
+	// usage table
+	if err := schemaUsage(db); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// InitDB initializes the db and tables that we require
-func InitDB(dataSourceName string) (*sql.DB, error) {
-	db, err := createDB(dataSourceName)
-	if err != nil {
-		return nil, err
-	}
+func schemaKarma(db *sql.DB) error {
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS karma (
+		id			INTEGER PRIMARY KEY, 
+		team		TEXT, 
+		user		TEXT,
+		karma 		INTEGER,
+		created_at	TEXT,
+		updated_at	TEXT
+	);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_karma_team_user ON karma (team, user);
+	`)
 
-	err = schema(db)
-	if err != nil {
-		return nil, err
-	}
+	return err
+}
 
-	return db, nil
+func schemaUsage(db *sql.DB) error {
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS usage (
+		command			TEXT,
+		text			TEXT,
+		enterprise		TEXT,
+		team			TEXT,
+		channel			TEXT,
+		user			TEXT,
+		created_at		TEXT,
+		response		TEXT,
+		response_type	TEXT,
+		attachements 	TEXT
+	);
+	`)
+
+	return err
 }
