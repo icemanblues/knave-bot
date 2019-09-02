@@ -81,7 +81,7 @@ func schemaUsage(db *sql.DB) error {
 		created_at		TEXT,
 		response		TEXT,
 		response_type	TEXT,
-		attachements 	TEXT
+		attachments 	TEXT
 	);
 	`)
 

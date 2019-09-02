@@ -74,23 +74,33 @@ func (dao *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
 	return 0, nil
 }
 
-// Usage tracks the usage of karma by pairing the request with the response
-func (dao *SQLiteDAO) Usage(data *slack.CommandData, res *slack.Response) error {
-	var att *string
-	j, err := json.Marshal(res.Attachments)
-	if err != nil {
-		log.Warn("Unable to json marshal attachments to string. Inserting anyway")
-		*att = ("Error " + err.Error())
-	} else {
-		*att = string(j)
+func stringAttachment(att []slack.Attachments) *string {
+	// it is null or empty, nothing to do here
+	if att == nil || len(att) == 0 {
+		return nil
 	}
 
-	_, err = dao.db.Exec(`
+	// marshal it to json and save it
+	j, err := json.Marshal(att)
+	if err != nil {
+		log.Warn("Unable to marshal attachments to json string. Inserting anyway without attachments", err)
+		return nil
+	}
+
+	s := string(j)
+	return &s
+}
+
+// Usage tracks the usage of karma by pairing the request with the response
+func (dao *SQLiteDAO) Usage(data *slack.CommandData, res *slack.Response) error {
+	s := stringAttachment(res.Attachments)
+
+	_, err := dao.db.Exec(`
 		INSERT INTO usage
-		(command, text, enterprise, team, channel, user, created_at, response, response_type, attachements)
+		(command, text, enterprise, team, channel, user, created_at, response, response_type, attachments)
 		VALUES
 		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-	`, data.Command, data.Text, data.EnterpriseID, data.TeamID, data.ChannelID, data.UserID, time.Now(), res.Text, res.ResponseType, att)
+	`, data.Command, data.Text, data.EnterpriseID, data.TeamID, data.ChannelID, data.UserID, time.Now(), res.Text, res.ResponseType, s)
 
 	return err
 }
