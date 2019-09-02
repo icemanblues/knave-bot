@@ -96,13 +96,14 @@ func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 		response = responseUnknownError
 	}
 
+	c.JSON(200, response)
+
+	// async log the usage
 	go func() {
 		if err := h.dao.Usage(data, response); err != nil {
 			log.Errorf("Unable to log karma usage %v", err)
 		}
 	}()
-
-	c.JSON(200, response)
 }
 
 // NewHandler factory method
