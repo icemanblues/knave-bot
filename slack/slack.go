@@ -55,6 +55,15 @@ var ResponseType = struct {
 	Ephemeral: "ephemeral",
 }
 
+// NewAttachments factory method to create a simple []Attachments
+func NewAttachments(s string) []Attachments {
+	if s == "" {
+		return nil
+	}
+
+	return []Attachments{Attachments{Text: s}}
+}
+
 // ChannelResponse factory method for a response that should be displayed to the entire channel
 func ChannelResponse(msg string) *Response {
 	return &Response{
@@ -68,7 +77,7 @@ func ChannelAttachmentsResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.InChannel,
 		Text:         msg,
-		Attachments:  []Attachments{Attachments{Text: att}},
+		Attachments:  NewAttachments(att),
 	}
 }
 
@@ -77,7 +86,7 @@ func DirectResponse(msg, att string) *Response {
 	return &Response{
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
-		Attachments:  []Attachments{Attachments{Text: att}},
+		Attachments:  NewAttachments(att),
 	}
 }
 
