@@ -15,4 +15,5 @@
 knave-bot
 
 # database files
+*.db
 var/
