@@ -45,6 +45,8 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 		return p.help()
 	}
 
+	words = userCmdAlias(words)
+
 	switch words[0] {
 	case "help":
 		return p.help()
@@ -60,10 +62,28 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 
 	case "--":
 		return p.subtract(c.TeamID, c.UserID, words)
-
-	default:
-		return p.help()
 	}
+
+	return p.help()
+}
+
+// alias for /karma @user cmd => /karma cmd user
+func userCmdAlias(words []string) []string {
+	if len(words) < 2 {
+		return words
+	}
+
+	target, tok := parseArgUser(words, 0)
+	cmd, cok := parseArg(words, 1)
+	if tok && cok {
+		w := []string{cmd, target}
+		if len(words) > 2 {
+			w = append(w, words[2:]...)
+		}
+		return w
+	}
+
+	return words
 }
 
 func parseArg(words []string, idx int) (string, bool) {

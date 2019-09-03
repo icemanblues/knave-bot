@@ -174,6 +174,52 @@ func command(text string) *slack.CommandData {
 	}
 }
 
+func TestUserCmdAlias(t *testing.T) {
+	testcases := []struct {
+		name     string
+		args     []string
+		expected []string
+	}{
+		{
+			name:     "nil",
+			args:     nil,
+			expected: nil,
+		},
+		{
+			name:     "empty",
+			args:     []string{},
+			expected: []string{},
+		},
+		{
+			name:     "one",
+			args:     []string{"one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "happy",
+			args:     []string{"USER", "++"},
+			expected: []string{"++", "USER"},
+		},
+		{
+			name:     "happy msg",
+			args:     []string{"USER", "++", "you", "go", "girl!"},
+			expected: []string{"++", "USER", "you", "go", "girl!"},
+		},
+		{
+			name:     "no change",
+			args:     []string{"status", "USER", "karma,", "baby!"},
+			expected: []string{"status", "USER", "karma,", "baby!"},
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			actual := userCmdAlias(test.args)
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
 func TestProcess(t *testing.T) {
 	testcases := []struct {
 		name         string
@@ -336,6 +382,38 @@ func TestProcess(t *testing.T) {
 			command:      command(""),
 			responseType: slack.ResponseType.Ephemeral,
 			text:         responseHelp.Text,
+		},
+		// ALIAS ++
+		{
+			name:         "USER ++",
+			command:      command("<@USER> ++"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 1 karma to <@USER>. <@USER> has 2 karma.",
+		},
+		{
+			name:         "USER ++ quantity",
+			command:      command("<@USER> ++ 3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
+		},
+		// ALIAS --
+		{
+			name:         "USER -- quantity",
+			command:      command("<@USER> -- 3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+		},
+		{
+			name:         "USER -- quantity out-of-bounds",
+			command:      command("<@USER> -- 9000"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgDeltaLimit,
+		},
+		{
+			name:         "USER -- quantity message",
+			command:      command("<@USER> -- 2 be better next time"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 2 karma from <@USER>. <@USER> has -1 karma.",
 		},
 	}
 
