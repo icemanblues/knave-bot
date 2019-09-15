@@ -53,9 +53,10 @@ func main() {
 	}
 	dao := karma.NewDao(db)
 
-	knave, karma := initKarma(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator, dao)
+	knaveHandler, karmaHandler := initKarma(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator, dao)
+
 	r := initGin()
-	BindRoutes(r, knave, karma)
+	BindRoutes(r, knaveHandler, karmaHandler)
 
 	// listen and serve on 0.0.0.0:8080
 	r.Run()
