@@ -19,10 +19,8 @@ func setupHandler() *GinHandler {
 
 func setupGin(h *GinHandler) *gin.Engine {
 	r := gin.Default()
-
-	r.GET("/insult", h.Insult)
-	r.GET("/compliment", h.Compliment)
-	r.POST("/slash/knave", h.SlashKnave)
+	g := r.Group("/knavebot")
+	BindRoutes(g, h)
 
 	return r
 }
@@ -32,7 +30,7 @@ func TestInsult(t *testing.T) {
 	r := setupGin(h)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/insult", nil)
+	req, _ := http.NewRequest("GET", "/knavebot/v1/insult", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -44,7 +42,7 @@ func TestCompliment(t *testing.T) {
 	r := setupGin(h)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/compliment", nil)
+	req, _ := http.NewRequest("GET", "/knavebot/v1/compliment", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -56,7 +54,7 @@ func TestSlashKnave(t *testing.T) {
 	r := setupGin(h)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/slash/knave", nil)
+	req, _ := http.NewRequest("POST", "/knavebot/v1/cmd/knave", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
