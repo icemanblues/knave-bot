@@ -9,6 +9,15 @@ import (
 	"github.com/icemanblues/knave-bot/slack"
 )
 
+// Commands a set of the support commands by this processor
+var commands = map[string]struct{}{
+	"help":   struct{}{},
+	"me":     struct{}{},
+	"status": struct{}{},
+	"++":     struct{}{},
+	"--":     struct{}{},
+}
+
 // Abs absolute value of an int
 func Abs(x int) int {
 	if x < 0 {
@@ -45,9 +54,24 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 		return p.help()
 	}
 
-	words = userCmdAlias(words)
-	words = addSubCmdAlias(words)
+	if _, ok := commands[words[0]]; ok {
+		return p.processCommand(words, c)
+	}
 
+	words = userCmdAlias(words)
+	if _, ok := commands[words[0]]; ok {
+		return p.processCommand(words, c)
+	}
+
+	words = addSubCmdAlias(words)
+	if _, ok := commands[words[0]]; ok {
+		return p.processCommand(words, c)
+	}
+
+	return p.help()
+}
+
+func (p SlackProcessor) processCommand(words []string, c *slack.CommandData) (*slack.Response, error) {
 	switch words[0] {
 	case "help":
 		return p.help()
