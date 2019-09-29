@@ -220,15 +220,34 @@ func TestUserCmdAlias(t *testing.T) {
 	}
 }
 
-func TestProcess(t *testing.T) {
-	testcases := []struct {
-		name         string
-		command      *slack.CommandData
-		responseType string
-		text         string
-		attach       bool
-	}{
-		// STATUS
+type ProcessTestCase struct {
+	name         string
+	command      *slack.CommandData
+	responseType string
+	text         string
+	attach       bool
+}
+
+func processHelper(t *testing.T, p Processor, test ProcessTestCase) {
+	t.Run(test.name, func(t *testing.T) {
+		actual, err := p.Process(test.command)
+		assert.Nil(t, err)
+		assert.NotNil(t, actual)
+
+		assert.Equal(t, test.responseType, actual.ResponseType)
+		assert.Equal(t, test.text, actual.Text)
+
+		if test.attach {
+			assert.NotNil(t, actual.Attachments)
+			assert.Len(t, actual.Attachments, 1)
+			assert.NotEmpty(t, actual.Attachments[0].Text)
+		}
+	})
+}
+
+func TestProcessStatus(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "status",
 			command:      command("status <@USER>"),
@@ -247,14 +266,32 @@ func TestProcess(t *testing.T) {
 			responseType: slack.ResponseType.Ephemeral,
 			text:         msgInvalidUser,
 		},
-		// ME
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessMe(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "me",
 			command:      command("me"),
 			responseType: slack.ResponseType.Ephemeral,
 			text:         "<@UCALLER> has 5 karma.",
 		},
-		// ADD
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessAdd(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "++",
 			command:      command("++ <@USER>"),
@@ -309,7 +346,16 @@ func TestProcess(t *testing.T) {
 			responseType: slack.ResponseType.Ephemeral,
 			text:         msgInvalidUser,
 		},
-		// SUBTRACT
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessSubtract(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "--",
 			command:      command("-- <@USER>"),
@@ -364,7 +410,16 @@ func TestProcess(t *testing.T) {
 			responseType: slack.ResponseType.Ephemeral,
 			text:         msgInvalidUser,
 		},
-		// HELP
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessHelp(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "help",
 			command:      command("help"),
@@ -382,8 +437,16 @@ func TestProcess(t *testing.T) {
 			command:      command(""),
 			responseType: slack.ResponseType.Ephemeral,
 			text:         responseHelp.Text,
-		},
-		// ALIAS ++
+		}}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessAliasPlusPlus(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "USER ++",
 			command:      command("<@USER> ++"),
@@ -396,7 +459,16 @@ func TestProcess(t *testing.T) {
 			responseType: slack.ResponseType.InChannel,
 			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
 		},
-		// ALIAS --
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessAliasMinusMinus(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
 		{
 			name:         "USER -- quantity",
 			command:      command("<@USER> -- 3"),
@@ -418,22 +490,7 @@ func TestProcess(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := mockProcessor(HappyDao())
-
-		t.Run(test.name, func(t *testing.T) {
-			actual, err := p.Process(test.command)
-			assert.Nil(t, err)
-			assert.NotNil(t, actual)
-
-			assert.Equal(t, test.responseType, actual.ResponseType)
-			assert.Equal(t, test.text, actual.Text)
-
-			if test.attach {
-				assert.NotNil(t, actual.Attachments)
-				assert.Len(t, actual.Attachments, 1)
-				assert.NotEmpty(t, actual.Attachments[0].Text)
-			}
-		})
+		processHelper(t, p, test)
 	}
 }
 
