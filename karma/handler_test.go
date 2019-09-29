@@ -18,10 +18,17 @@ func setup(dao DAO) *gin.Engine {
 	h := NewHandler(proc, dao)
 
 	r := gin.Default()
-	r.GET("/karma/:team/:user", h.GetKarma)
-	r.PUT("/karma/:team/:user", h.AddKarma)
-	r.DELETE("/karma/:team/:user", h.DelKarma)
-	r.POST("/slash/karma", h.SlashKarma)
+
+	knaveRouter := r.Group("/knavebot")
+	karmaRouter := r.Group("/karmabot")
+	BindRoutes(karmaRouter, knaveRouter, h)
+
+	/*
+		r.GET("/karma/:team/:user", h.GetKarma)
+		r.PUT("/karma/:team/:user", h.AddKarma)
+		r.DELETE("/karma/:team/:user", h.DelKarma)
+		r.POST("/slash/karma", h.SlashKarma)
+	*/
 
 	return r
 }
@@ -54,7 +61,7 @@ func TestGetKarma(t *testing.T) {
 
 			// undertest
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/karma/nycfc/davidvilla", nil)
+			req, _ := http.NewRequest("GET", "/karmabot/v1/nycfc/davidvilla", nil)
 			r.ServeHTTP(w, req)
 
 			// assert
@@ -109,7 +116,7 @@ func TestAddKarma(t *testing.T) {
 
 			// undertest
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("PUT", "/karma/nycfc/davidvilla?delta="+test.delta, nil)
+			req, _ := http.NewRequest("PUT", "/karmabot/v1/nycfc/davidvilla?delta="+test.delta, nil)
 			r.ServeHTTP(w, req)
 
 			// assert
@@ -147,7 +154,7 @@ func TestDelKarma(t *testing.T) {
 
 			// undertest
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", "/karma/nycfc/davidvilla", nil)
+			req, _ := http.NewRequest("DELETE", "/karmabot/v1/nycfc/davidvilla", nil)
 			r.ServeHTTP(w, req)
 
 			// assert
@@ -182,7 +189,7 @@ func karmaTestRunner(t *testing.T, testcases []KarmaTestCase) {
 			// undertest
 			w := httptest.NewRecorder()
 			body := strings.NewReader(test.form.Encode())
-			req, _ := http.NewRequest("POST", "/slash/karma", body)
+			req, _ := http.NewRequest("POST", "/knavebot/v1/cmd/karma", body)
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			r.ServeHTTP(w, req)
 
