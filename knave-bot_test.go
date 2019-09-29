@@ -66,3 +66,76 @@ func TestKnaveCompliment(t *testing.T) {
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, "compliment", w.Body.String())
 }
+
+func TestKnaveSlashCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping functional test")
+	}
+
+	r := setup(t)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/knavebot/v1/cmd/knave", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	// it will return the insult wrapped in a slack response
+	// assert.Equal(t, "insult", w.Body.String())
+}
+
+func TestKarmaPut(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping functional test")
+	}
+
+	r := setup(t)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/karmabot/v1/team1/playerB?delta=3", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "3", w.Body.String())
+}
+
+func TestKarmaDelete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping functional test")
+	}
+
+	r := setup(t)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/karmabot/v1/team1/playerD", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "0", w.Body.String())
+}
+
+func TestKarmaGet(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping functional test")
+	}
+
+	r := setup(t)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/karmabot/v1/team1/playerA", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "0", w.Body.String())
+}
+
+func TestKarmaSlashCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping functional test")
+	}
+
+	r := setup(t)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/knavebot/v1/cmd/karma", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	// it will return the HELP sub-command
+	// assert.Equal(t, slack.ResponseHelp, w.Body.String())
+}
