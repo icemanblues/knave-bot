@@ -220,6 +220,72 @@ func TestUserCmdAlias(t *testing.T) {
 	}
 }
 
+func TestAddSubCmdAlias(t *testing.T) {
+	testcases := []struct {
+		name     string
+		args     []string
+		expected []string
+	}{
+		{
+			name:     "nil",
+			args:     nil,
+			expected: nil,
+		},
+		{
+			name:     "empty",
+			args:     []string{},
+			expected: []string{},
+		},
+		{
+			name:     "one",
+			args:     []string{"one"},
+			expected: []string{"one"},
+		},
+		{
+			name:     "plus 3",
+			args:     []string{"+3", "USER"},
+			expected: []string{"++", "USER", "3"},
+		},
+		{
+			name:     "minus 3",
+			args:     []string{"-3", "USER"},
+			expected: []string{"--", "USER", "3"},
+		},
+		{
+			name:     "plus 5 msg",
+			args:     []string{"+5", "USER", "you", "go", "girl!"},
+			expected: []string{"++", "USER", "5", "you", "go", "girl!"},
+		},
+		{
+			name:     "minus 2 msg",
+			args:     []string{"-2", "USER", "you", "go", "girl!"},
+			expected: []string{"--", "USER", "2", "you", "go", "girl!"},
+		},
+		{
+			name:     "no change",
+			args:     []string{"++", "USER", "2", "go", "girl!"},
+			expected: []string{"++", "USER", "2", "go", "girl!"},
+		},
+		{
+			name:     "four (no plus)",
+			args:     []string{"4", "USER"},
+			expected: []string{"++", "USER", "4"},
+		},
+		{
+			name:     "zero",
+			args:     []string{"0", "USER"},
+			expected: []string{"0", "USER"},
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			actual := addSubCmdAlias((test.args))
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
 type ProcessTestCase struct {
 	name         string
 	command      *slack.CommandData
@@ -486,6 +552,58 @@ func TestProcessAliasMinusMinus(t *testing.T) {
 			command:      command("<@USER> -- 2 be better next time"),
 			responseType: slack.ResponseType.InChannel,
 			text:         "<@UCALLER> is taking away 2 karma from <@USER>. <@USER> has -1 karma.",
+		},
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessAliasAddSubNumber(t *testing.T) {
+	p := mockProcessor(HappyDao())
+	testcases := []ProcessTestCase{
+		{
+			name:         "USER three",
+			command:      command("<@USER> +3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
+		},
+		{
+			name:         "USER three (no plus)",
+			command:      command("<@USER> 3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
+		},
+		{
+			name:         "three USER",
+			command:      command("3 <@USER>"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is giving 3 karma to <@USER>. <@USER> has 4 karma.",
+		},
+		{
+			name:         "USER minus three",
+			command:      command("<@USER> -3"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+		},
+		{
+			name:         "minus three USER",
+			command:      command("-3 <@USER>"),
+			responseType: slack.ResponseType.InChannel,
+			text:         "<@UCALLER> is taking away 3 karma from <@USER>. <@USER> has -2 karma.",
+		},
+		{
+			name:         "USER 0",
+			command:      command("<@USER> 0"),
+			responseType: responseHelp.ResponseType,
+			text:         responseHelp.Text,
+		},
+		{
+			name:         "0 USER",
+			command:      command("0 <@USER>"),
+			responseType: responseHelp.ResponseType,
+			text:         responseHelp.Text,
 		},
 	}
 

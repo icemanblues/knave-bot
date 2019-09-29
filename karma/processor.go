@@ -46,6 +46,7 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	}
 
 	words = userCmdAlias(words)
+	words = addSubCmdAlias(words)
 
 	switch words[0] {
 	case "help":
@@ -67,7 +68,36 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	return p.help()
 }
 
-// alias for /karma @user cmd => /karma cmd user
+// alias for /karma +5 @user => /karma ++ @user 5
+func addSubCmdAlias(words []string) []string {
+	if len(words) < 2 {
+		return words
+	}
+
+	delta, err := strconv.Atoi(words[0])
+	if err != nil {
+		return words
+	}
+
+	if delta == 0 {
+		return words
+	}
+
+	d := strconv.Itoa(Abs(delta))
+
+	if delta > 0 {
+		w := []string{"++", words[1], d}
+		w = append(w, words[2:]...)
+		return w
+	}
+
+	// must be negative
+	w := []string{"--", words[1], d}
+	w = append(w, words[2:]...)
+	return w
+}
+
+// alias for /karma @user cmd => /karma cmd @user
 func userCmdAlias(words []string) []string {
 	if len(words) < 2 {
 		return words
