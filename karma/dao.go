@@ -9,12 +9,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// UserKarma slack users and their karma totals
+type UserKarma struct {
+	User  string
+	Karma int
+}
+
 // DAO Data Access Object for the Karma database
 type DAO interface {
 	GetKarma(team, user string) (int, error)
 	UpdateKarma(team, user string, delta int) (int, error)
 	DeleteKarma(team, user string) (int, error)
 	Usage(*slack.CommandData, *slack.Response) error
+	Top(team string, n int) ([]UserKarma, error)
 }
 
 // SQLiteDAO a SQLite imlpementation of the Karma database
@@ -103,6 +110,39 @@ func (dao *SQLiteDAO) Usage(data *slack.CommandData, res *slack.Response) error 
 	`, data.Command, data.Text, data.EnterpriseID, data.TeamID, data.ChannelID, data.UserID, time.Now(), res.Text, res.ResponseType, s)
 
 	return err
+}
+
+// Top returns the top n users (ordered by karma) from a given team
+func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
+	rows, err := dao.db.Query(`
+		SELECT		k.user, 
+					k.karma
+		FROM  		karma k
+		WHERE 		k.team = ?
+		AND			k.karma > 0
+		ORDER BY	k.karma DESC
+		LIMIT ?;
+	`, team, n)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	topUser := make([]UserKarma, 0, n)
+	for rows.Next() {
+		var u UserKarma
+		if err := rows.Scan(&u.User, &u.Karma); err != nil {
+			log.Errorf("Unable to scan User Karma row for team %v", team)
+		}
+		topUser = append(topUser, u)
+	}
+	// Check for errors from iterating over rows.
+	if err := rows.Err(); err != nil {
+		log.Errorf("Unable to scan User Karma from iterating rows for team %v", team)
+		return nil, err
+	}
+
+	return topUser, nil
 }
 
 // NewDao factory method

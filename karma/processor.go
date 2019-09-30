@@ -16,6 +16,7 @@ var commands = map[string]struct{}{
 	"status": struct{}{},
 	"++":     struct{}{},
 	"--":     struct{}{},
+	"top":    struct{}{},
 }
 
 // Abs absolute value of an int
@@ -87,6 +88,9 @@ func (p SlackProcessor) processCommand(words []string, c *slack.CommandData) (*s
 
 	case "--":
 		return p.subtract(c.TeamID, c.UserID, words)
+
+	case "top":
+		return p.top(c.TeamID, words)
 	}
 
 	return p.help()
@@ -207,6 +211,30 @@ func (p SlackProcessor) status(team, callee string, words []string) (*slack.Resp
 	msg.WriteString(fmt.Sprintf("<@%s> has requested karma total for <@%s>. ", callee, target))
 	UserStatus(target, k, msg)
 	p.Salutation(k, att)
+	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
+}
+
+func (p SlackProcessor) top(team string, words []string) (*slack.Response, error) {
+	n, _ := parseArgInt(words, 1, 3)
+
+	topUsers, err := p.dao.Top(team, n)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(topUsers) == 0 {
+		// no one with positive karma
+		// how do we want to message it back
+		return slack.DirectResponse("Um.. there are no users with karma above 0 :(", ""), nil
+	}
+
+	msg, att := &strings.Builder{}, &strings.Builder{}
+	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", n))
+	msg.WriteString("Rank\tName\tKarma\n")
+	for i, user := range topUsers {
+		msg.WriteString(fmt.Sprintf("%v\t%v\t%v\n", i+1, user.User, user.Karma))
+	}
+	att.WriteString(p.compliment.Sentence())
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 

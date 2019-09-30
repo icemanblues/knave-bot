@@ -16,6 +16,7 @@ type Handler interface {
 	AddKarma(c *gin.Context)
 	DelKarma(c *gin.Context)
 	SlashKarma(c *gin.Context)
+	TopKarma(c *gin.Context)
 }
 
 // SQLiteHandler Karma Handler implementation using sqlite
@@ -74,6 +75,25 @@ func (h *SQLiteHandler) DelKarma(c *gin.Context) {
 	}
 
 	c.String(200, "%v", k)
+}
+
+// TopKarma returns the top n users for a given team
+func (h *SQLiteHandler) TopKarma(c *gin.Context) {
+	team := c.Param("team")
+
+	top := c.Query("top")
+	n, err := strconv.Atoi(top)
+	if err != nil {
+		c.String(400, "Please pass a valid integer. %v", n)
+		return
+	}
+	if n <= 0 {
+		c.String(400, "Please pass a positive non-zero integer. %v", n)
+		return
+	}
+
+	topUsers, err := h.dao.Top(team, n)
+	c.JSON(200, topUsers)
 }
 
 var responseUnknownError = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")

@@ -14,6 +14,7 @@ type MockDAO struct {
 	UpdateKarmaMock func(team, user string, delta int) (int, error)
 	DeleteKarmaMock func(team, user string) (int, error)
 	UsageMock       func(*slack.CommandData, *slack.Response) error
+	TopMock         func(team string, n int) ([]UserKarma, error)
 }
 
 // GetKarma .
@@ -36,6 +37,11 @@ func (m MockDAO) Usage(d *slack.CommandData, r *slack.Response) error {
 	return m.UsageMock(d, r)
 }
 
+// Top .
+func (m MockDAO) Top(team string, n int) ([]UserKarma, error) {
+	return m.TopMock(team, n)
+}
+
 // HappyDao factory method for a mock dao that will always succeed
 func HappyDao() *MockDAO {
 	return &MockDAO{
@@ -50,6 +56,9 @@ func HappyDao() *MockDAO {
 		},
 		UsageMock: func(d *slack.CommandData, r *slack.Response) error {
 			return nil
+		},
+		TopMock: func(team string, n int) ([]UserKarma, error) {
+			return []UserKarma{{"user", 100}}, nil
 		},
 	}
 }
@@ -68,6 +77,9 @@ func SadDao() *MockDAO {
 		},
 		UsageMock: func(d *slack.CommandData, r *slack.Response) error {
 			return errors.New("UsageMock")
+		},
+		TopMock: func(team string, n int) ([]UserKarma, error) {
+			return nil, errors.New("TopMock")
 		},
 	}
 }
