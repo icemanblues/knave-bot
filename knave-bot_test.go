@@ -90,7 +90,7 @@ func TestKarmaPut(t *testing.T) {
 
 	r := setup(t)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/karmabot/v1/team1/playerB?delta=3", nil)
+	req, _ := http.NewRequest("PUT", "/karmabot/v1/team/team1/playerB?delta=3", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -104,7 +104,7 @@ func TestKarmaDelete(t *testing.T) {
 
 	r := setup(t)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/karmabot/v1/team1/playerD", nil)
+	req, _ := http.NewRequest("DELETE", "/karmabot/v1/team/team1/playerD", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -118,7 +118,7 @@ func TestKarmaGet(t *testing.T) {
 
 	r := setup(t)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/karmabot/v1/team1/playerA", nil)
+	req, _ := http.NewRequest("GET", "/karmabot/v1/team/team1/playerA", nil)
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
