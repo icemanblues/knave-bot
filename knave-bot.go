@@ -22,8 +22,8 @@ func logger() {
 }
 
 // InitKarma initializes the components and wires them together, for Karma and Knave bot
-func initKarma(insult, compliment shakespeare.Generator, dao karma.DAO) (knave.Handler, karma.Handler) {
-	karmaProc := karma.NewProcessor(dao, insult, compliment)
+func initKarma(insult, compliment shakespeare.Generator, dao karma.DAO, dailyDao karma.DailyDao) (knave.Handler, karma.Handler) {
+	karmaProc := karma.NewProcessor(dao, dailyDao, insult, compliment)
 
 	knave := knave.NewHandler(insult, compliment)
 	karma := karma.NewHandler(karmaProc, dao)
@@ -52,8 +52,9 @@ func main() {
 		panic(err)
 	}
 	dao := karma.NewDao(db)
+	dailydao := karma.NewDailyDao(db)
 
-	knaveHandler, karmaHandler := initKarma(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator, dao)
+	knaveHandler, karmaHandler := initKarma(shakespeare.InsultGenerator, shakespeare.ComplimentGenerator, dao, dailydao)
 
 	r := initGin()
 	BindRoutes(r, knaveHandler, karmaHandler)

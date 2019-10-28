@@ -50,6 +50,11 @@ func schema(db *sql.DB) error {
 		return err
 	}
 
+	// daily usage table
+	if err := schemaDailyUsage(db); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -83,6 +88,23 @@ func schemaUsage(db *sql.DB) error {
 		response_type	TEXT,
 		attachments 	TEXT
 	);
+	`)
+
+	return err
+}
+
+func schemaDailyUsage(db *sql.DB) error {
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS daily_usage (
+		team		TEXT, 
+		user		TEXT,
+		daily		TEXT,
+		usage 		INTEGER,
+		created_at	TEXT,
+		updated_at	TEXT,
+		PRIMARY KEY (team, user, daily)
+	);
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_usage_team_user_daily ON daily_usage (team, user, daily);
 	`)
 
 	return err

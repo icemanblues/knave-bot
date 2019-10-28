@@ -69,7 +69,7 @@ func TestSalutation(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			p := mockProcessor(HappyDao())
+			p := mockProcessor(HappyDao(), HappyDailyDao())
 			sb := &strings.Builder{}
 			p.Salutation(test.karma, sb)
 			actual := sb.String()

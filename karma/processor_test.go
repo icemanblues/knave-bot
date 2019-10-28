@@ -312,7 +312,7 @@ func processHelper(t *testing.T, p Processor, test ProcessTestCase) {
 }
 
 func TestProcessStatus(t *testing.T) {
-	p := mockProcessor(HappyDao())
+	p := mockProcessor(HappyDao(), HappyDailyDao())
 	testcases := []ProcessTestCase{
 		{
 			name:         "status",

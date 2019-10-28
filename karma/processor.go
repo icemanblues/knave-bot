@@ -4,11 +4,19 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
 )
 
+// SingleLimit one time karma swings are capped at 5 (default)
+const SingleLimit int = 5
+
+// DailyLimit this is the default daily limit for giving/ taking karma
+const DailyLimit int = 25
+
+// TODO: Probably need a processor config object to contain all of these customizations
 // do we want to make this an enum, a struct with these fields?
 const help string = "help"
 const me string = "me"
@@ -17,7 +25,7 @@ const add string = "++"
 const sub string = "--"
 const top string = "top"
 
-// commands a set of the support commands by this processor
+// Commands a set of the support commands by this processor
 var commands = map[string]struct{}{
 	help:   struct{}{},
 	me:     struct{}{},
@@ -35,6 +43,13 @@ func Abs(x int) int {
 	return x
 }
 
+const layout string = "2006-01-02"
+
+// IsoDate converts a time object to 2006-01-02 format
+func IsoDate(t time.Time) string {
+	return t.Format(layout)
+}
+
 // Processor processes slash-commands into slack responses
 type Processor interface {
 	Process(cd *slack.CommandData) (*slack.Response, error)
@@ -43,13 +58,14 @@ type Processor interface {
 // SlackProcessor an implementation of KarmaProcessor that uses SQLite
 type SlackProcessor struct {
 	dao        DAO
+	dailyDao   DailyDao
 	insult     shakespeare.Generator
 	compliment shakespeare.Generator
 }
 
 // NewProcessor factory method
-func NewProcessor(dao DAO, insult, compliment shakespeare.Generator) *SlackProcessor {
-	return &SlackProcessor{dao, insult, compliment}
+func NewProcessor(dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) *SlackProcessor {
+	return &SlackProcessor{dao, dailyDao, insult, compliment}
 }
 
 // Process handles Karma processing from slack API
@@ -193,6 +209,14 @@ func (p SlackProcessor) me(team, userID string) (*slack.Response, error) {
 		return nil, err
 	}
 
+	// TODO: display how much daily karma is available
+	// Need to make sure that time.Now is using yyyy-MM-dd format
+	// usage, err := p.dailyDao.GetDaily(team, userID, time.Now())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// available := DailyLimit - usage
+
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	UserStatus(userID, k, msg)
 	p.Salutation(k, att)
@@ -280,8 +304,20 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 	if delta < 0 {
 		return slack.ErrorResponse(msgAddCantRemove), nil
 	}
-	if delta > 5 {
+	if delta > SingleLimit {
 		return slack.ErrorResponse(msgDeltaLimit), nil
+	}
+
+	// TODO: Check daily usage before attempting to Update
+	// Need to make sure that time.Now() is using yyyy-mm-dd
+	u, err := p.dailyDao.GetDaily(team, target, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	available := DailyLimit - u
+	if available < delta {
+		// return an error message
+
 	}
 
 	k, err := p.dao.UpdateKarma(team, target, delta)
@@ -319,8 +355,20 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 	if delta < 0 {
 		return slack.DirectResponse(msgSubtractCantAdd, cmdSub), nil
 	}
-	if delta > 5 {
+	if delta > SingleLimit {
 		return slack.ErrorResponse(msgDeltaLimit), nil
+	}
+
+	// TODO: Check daily usage before attempting to Update
+	// Need to make sure that time.Now() is using yyyy-mm-dd
+	u, err := p.dailyDao.GetDaily(team, target, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	available := DailyLimit - u
+	if available < delta {
+		// return an error message
+
 	}
 
 	k, err := p.dao.UpdateKarma(team, target, -delta)

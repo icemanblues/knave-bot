@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setup(dao DAO) *gin.Engine {
-	proc := mockProcessor(dao)
+func setup(dao DAO, dailyDao DailyDao) *gin.Engine {
+	proc := mockProcessor(dao, dailyDao)
 	h := NewHandler(proc, dao)
 
 	r := gin.Default()
@@ -50,7 +50,7 @@ func TestGetKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao)
+			r := setup(test.dao, nil)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -105,7 +105,7 @@ func TestAddKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao)
+			r := setup(test.dao, nil)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -143,7 +143,7 @@ func TestDelKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao)
+			r := setup(test.dao, nil)
 
 			// undertest
 			w := httptest.NewRecorder()

@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/icemanblues/knave-bot/slack"
-
-	"github.com/icemanblues/knave-bot/shakespeare"
 )
 
 // MockDAO a mock dao for karma whose mock functions can be monkeypatched
@@ -89,10 +87,4 @@ func SadDao() *MockDAO {
 			return nil, errors.New("TopMock")
 		},
 	}
-}
-
-func mockProcessor(dao DAO) *SlackProcessor {
-	return NewProcessor(dao,
-		shakespeare.New("insult", "", nil),
-		shakespeare.New("compliment", "", nil))
 }
