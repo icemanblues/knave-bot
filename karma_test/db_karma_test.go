@@ -12,17 +12,17 @@ import (
 
 const testDB = "var/test/test.db"
 
-func setupDB(datasource string) (*sql.DB, karma.DAO, error) {
+func setupDB(datasource string) (*sql.DB, karma.DAO, karma.DailyDao, error) {
 	if err := os.RemoveAll(datasource); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	db, err := karma.InitDB(datasource)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return db, karma.NewDao(db), nil
+	return db, karma.NewDao(db), karma.NewDailyDao(db), nil
 }
 
 func rowCountKarma(t *testing.T, db *sql.DB) int {
@@ -46,7 +46,7 @@ func TestGetKarma(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, dao, err := setupDB(testDB)
+	db, dao, _, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	rowCount := rowCountKarma(t, db)
@@ -62,7 +62,7 @@ func TestUpdateKarma(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, dao, err := setupDB(testDB)
+	db, dao, _, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	// confirm zeror rows
@@ -106,7 +106,7 @@ func TestDeleteKarma(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, dao, err := setupDB(testDB)
+	db, dao, _, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	rc := rowCountKarma(t, db)
@@ -141,7 +141,7 @@ func TestUsage(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, dao, err := setupDB(testDB)
+	db, dao, _, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	rowCount := rowCountUsage(t, db)
@@ -198,7 +198,7 @@ func TestTopKarma(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, dao, err := setupDB(testDB)
+	db, dao, _, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	rowCount := rowCountKarma(t, db)
