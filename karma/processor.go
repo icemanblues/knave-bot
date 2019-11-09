@@ -8,6 +8,7 @@ import (
 
 	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
+	log "github.com/sirupsen/logrus"
 )
 
 // TODO: Probably need a processor config object to contain all of these customizations
@@ -316,8 +317,14 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
 	}
 
+	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
 	k, err := p.dao.UpdateKarma(team, target, delta)
 	if err != nil {
+		return nil, err
+	}
+	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
+	if err != nil {
+		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return nil, err
 	}
 
@@ -365,8 +372,14 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
 	}
 
+	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
 	k, err := p.dao.UpdateKarma(team, target, -delta)
 	if err != nil {
+		return nil, err
+	}
+	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
+	if err != nil {
+		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return nil, err
 	}
 
