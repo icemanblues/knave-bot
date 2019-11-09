@@ -29,7 +29,7 @@ var responseHelp = &slack.Response{
 			Fields: []slack.Field{
 				{
 					Title: cmdMe,
-					Value: "Return your karma.",
+					Value: "Return your karma and daily usage limits.",
 					Short: true,
 				},
 				{
