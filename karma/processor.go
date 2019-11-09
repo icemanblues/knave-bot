@@ -9,14 +9,22 @@ import (
 	"github.com/icemanblues/knave-bot/slack"
 )
 
-// Commands a set of the support commands by this processor
+// do we want to make this an enum, a struct with these fields?
+const help string = "help"
+const me string = "me"
+const status string = "status"
+const add string = "++"
+const sub string = "--"
+const top string = "top"
+
+// commands a set of the support commands by this processor
 var commands = map[string]struct{}{
-	"help":   struct{}{},
-	"me":     struct{}{},
-	"status": struct{}{},
-	"++":     struct{}{},
-	"--":     struct{}{},
-	"top":    struct{}{},
+	help:   struct{}{},
+	me:     struct{}{},
+	status: struct{}{},
+	add:    struct{}{},
+	sub:    struct{}{},
+	top:    struct{}{},
 }
 
 // Abs absolute value of an int
@@ -74,22 +82,22 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 
 func (p SlackProcessor) processCommand(words []string, c *slack.CommandData) (*slack.Response, error) {
 	switch words[0] {
-	case "help":
+	case help:
 		return p.help()
 
-	case "me":
+	case me:
 		return p.me(c.TeamID, c.UserID)
 
-	case "status":
+	case status:
 		return p.status(c.TeamID, c.UserID, words)
 
-	case "++":
+	case add:
 		return p.add(c.TeamID, c.UserID, words)
 
-	case "--":
+	case sub:
 		return p.subtract(c.TeamID, c.UserID, words)
 
-	case "top":
+	case top:
 		return p.top(c.TeamID, words)
 	}
 
@@ -214,8 +222,20 @@ func (p SlackProcessor) status(team, callee string, words []string) (*slack.Resp
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
+const topUserDefault = 3
+const topUserMax = 10
+
 func (p SlackProcessor) top(team string, words []string) (*slack.Response, error) {
-	n, _ := parseArgInt(words, 1, 3)
+	n, _ := parseArgInt(words, 1, topUserDefault)
+
+	// no negatives are allowed
+	if n <= 0 {
+		n = topUserDefault
+	}
+	// anything larger than 10 would look funny
+	if n > topUserMax {
+		n = topUserMax
+	}
 
 	topUsers, err := p.dao.Top(team, n)
 	if err != nil {
@@ -225,14 +245,14 @@ func (p SlackProcessor) top(team string, words []string) (*slack.Response, error
 	if len(topUsers) == 0 {
 		// no one with positive karma
 		// how do we want to message it back
-		return slack.DirectResponse("Um.. there are no users with karma above 0 :(", ""), nil
+		return slack.DirectResponse("Um.. is it possible that there are no users with positive karma :(", ""), nil
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", n))
 	msg.WriteString("Rank\tName\tKarma\n")
 	for i, user := range topUsers {
-		msg.WriteString(fmt.Sprintf("%v\t%v\t%v\n", i+1, user.User, user.Karma))
+		msg.WriteString(fmt.Sprintf("%v\t<%v>\t%v\n", i+1, user.User, user.Karma))
 	}
 	att.WriteString(p.compliment.Sentence())
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil

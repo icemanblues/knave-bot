@@ -119,8 +119,8 @@ func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 					k.karma
 		FROM  		karma k
 		WHERE 		k.team = ?
-		AND			k.karma > 0
-		ORDER BY	k.karma DESC
+		AND			k.karma >= 0
+		ORDER BY	k.karma DESC, k.updated_at DESC
 		LIMIT ?;
 	`, team, n)
 	if err != nil {
@@ -128,13 +128,13 @@ func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 	}
 	defer rows.Close()
 
-	topUser := make([]UserKarma, 0, n)
+	topUsers := make([]UserKarma, 0, n)
 	for rows.Next() {
 		var u UserKarma
 		if err := rows.Scan(&u.User, &u.Karma); err != nil {
-			log.Errorf("Unable to scan User Karma row for team %v", team)
+			log.Errorf("Unable to scan User Karma row for team %v %v", team, err)
 		}
-		topUser = append(topUser, u)
+		topUsers = append(topUsers, u)
 	}
 	// Check for errors from iterating over rows.
 	if err := rows.Err(); err != nil {
@@ -142,7 +142,7 @@ func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 		return nil, err
 	}
 
-	return topUser, nil
+	return topUsers, nil
 }
 
 // NewDao factory method

@@ -192,3 +192,59 @@ func TestUsage(t *testing.T) {
 	rowCount = rowCountUsage(t, db)
 	assert.Equal(t, 5, rowCount)
 }
+
+func TestTopKarma(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping db integration test")
+	}
+
+	db, dao, err := setupDB(testDB)
+	assert.Nil(t, err)
+
+	rowCount := rowCountKarma(t, db)
+	assert.Zero(t, rowCount)
+
+	// insert default values
+	team := "avengers"
+	avengers := []karma.UserKarma{
+		{"UCaptAmerica", 704},
+		{"UHulk", 604},
+		{"UThor", 1704},
+		{"UDrStange", 505},
+		{"UCaptMarvel", 9000},
+		{"UIronman", 1400},
+		{"USpiderman", 704},
+	}
+	for _, uk := range avengers {
+		k, err := dao.UpdateKarma(team, uk.User, uk.Karma)
+		assert.Nil(t, err)
+		assert.Equal(t, uk.Karma, k)
+	}
+
+	// the names are hand sorted
+	topNames := []string{"UCaptMarvel", "UThor", "UIronman", "USpiderman", "UCaptAmerica", "UHulk", "UDrStange"}
+
+	// helper to convert users to names
+	justNames := func(uk []karma.UserKarma) []string {
+		names := make([]string, 0, len(uk))
+		for _, u := range uk {
+			names = append(names, u.User)
+		}
+
+		return names
+	}
+
+	topUsers, err := dao.Top(team, 1)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(topUsers))
+	assert.Equal(t, topNames[:1], justNames(topUsers))
+
+	topUsers, err = dao.Top(team, 25)
+	assert.Nil(t, err)
+	assert.Equal(t, len(topNames), len(topUsers))
+	assert.Equal(t, topNames, justNames(topUsers))
+
+	topUsers, err = dao.Top("does-not-exist", 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(topUsers))
+}

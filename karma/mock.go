@@ -2,6 +2,7 @@ package karma
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/icemanblues/knave-bot/slack"
 
@@ -58,7 +59,13 @@ func HappyDao() *MockDAO {
 			return nil
 		},
 		TopMock: func(team string, n int) ([]UserKarma, error) {
-			return []UserKarma{{"user", 100}}, nil
+			r := make([]UserKarma, 0, n)
+			for i := 0; i < n; i++ {
+				name := fmt.Sprintf("USER%v", i)
+				karma := 100 + i
+				r = append(r, UserKarma{name, karma})
+			}
+			return r, nil
 		},
 	}
 }

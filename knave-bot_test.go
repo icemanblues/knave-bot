@@ -136,6 +136,5 @@ func TestKarmaSlashCommand(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
-	// it will return the HELP sub-command
-	// assert.Equal(t, slack.ResponseHelp, w.Body.String())
+	// TODO: check that it is returning the help messsage
 }
