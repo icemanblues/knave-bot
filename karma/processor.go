@@ -249,7 +249,7 @@ func (p SlackProcessor) top(team string, words []string) (*slack.Response, error
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", n))
+	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", len(topUsers)))
 	msg.WriteString("Rank\tName\tKarma\n")
 	for i, user := range topUsers {
 		msg.WriteString(fmt.Sprintf("%v\t<@%v>\t%v\n", i+1, user.User, user.Karma))

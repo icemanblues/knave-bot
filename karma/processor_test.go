@@ -362,7 +362,7 @@ func TestProcessTop(t *testing.T) {
 		},
 		{
 			name:         "top over max",
-			command:      command("top 25"),
+			command:      command("top 100"),
 			responseType: slack.ResponseType.InChannel,
 			text:         "The top 10 users by karma:\nRank\tName\tKarma\n1\t<@USER0>\t100\n2\t<@USER1>\t101\n3\t<@USER2>\t102\n4\t<@USER3>\t103\n5\t<@USER4>\t104\n6\t<@USER5>\t105\n7\t<@USER6>\t106\n8\t<@USER7>\t107\n9\t<@USER8>\t108\n10\t<@USER9>\t109\n",
 		},
