@@ -308,7 +308,7 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 	}
 
 	// daily usage check
-	usage, err := p.dailyDao.GetDaily(team, target, time.Now())
+	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +363,7 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 	}
 
 	// daily usage check
-	usage, err := p.dailyDao.GetDaily(team, target, time.Now())
+	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
 	if err != nil {
 		return nil, err
 	}
