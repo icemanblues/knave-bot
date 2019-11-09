@@ -252,7 +252,7 @@ func (p SlackProcessor) top(team string, words []string) (*slack.Response, error
 	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", n))
 	msg.WriteString("Rank\tName\tKarma\n")
 	for i, user := range topUsers {
-		msg.WriteString(fmt.Sprintf("%v\t<%v>\t%v\n", i+1, user.User, user.Karma))
+		msg.WriteString(fmt.Sprintf("%v\t<@%v>\t%v\n", i+1, user.User, user.Karma))
 	}
 	att.WriteString(p.compliment.Sentence())
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
