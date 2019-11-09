@@ -15,7 +15,7 @@ func TestUserStatus(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "posiive karma",
+			name:     "positive karma",
 			user:     "user",
 			karma:    105,
 			expected: "<@user> has 105 karma.",

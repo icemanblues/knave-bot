@@ -14,6 +14,7 @@ const cmdStatus = "/karma status @user"
 const cmdAdd = "/karma ++ @user"
 const cmdSub = "/karma -- @user"
 const cmdHelp = "/karma help"
+const cmdTop = "/karma top"
 
 // Slack Reponses
 
@@ -44,6 +45,11 @@ var responseHelp = &slack.Response{
 				{
 					Title: cmdSub,
 					Value: "Provide a @user and decrease their karma. Optionally, pass a quantity of karma to take.",
+					Short: true,
+				},
+				{
+					Title: cmdTop,
+					Value: "Return the top 3 users by karma. Optionally, pass a quantity for the top n users",
 					Short: true,
 				},
 				{
