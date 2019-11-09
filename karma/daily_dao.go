@@ -18,7 +18,14 @@ type SQLiteDailyDAO struct {
 	db *sql.DB
 }
 
-// GetDaily .
+const layout string = "2006-01-02"
+
+// IsoDate converts a time object to 2006-01-02 format
+func IsoDate(t time.Time) string {
+	return t.Format(layout)
+}
+
+// GetDaily return the amount of karma the team/user has gives/taken for a day
 func (dao *SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, error) {
 	row := dao.db.QueryRow(`
 		SELECT du.usage
@@ -26,7 +33,7 @@ func (dao *SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, err
 		WHERE  du.team = ?
 		AND	   du.user = ?
 		AND	   du.daily = ?;
-	`, team, user, date)
+	`, team, user, IsoDate(date))
 
 	var u int
 	err := row.Scan(&u)
@@ -38,7 +45,7 @@ func (dao *SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, err
 	return u, nil
 }
 
-// UpdateDaily .
+// UpdateDaily adds karma to team/user's daily usage count
 func (dao *SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
 	_, err := dao.db.Exec(`
 		INSERT INTO daily_usage
@@ -48,7 +55,7 @@ func (dao *SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma 
 		ON CONFLICT(team, user, daily) DO UPDATE SET 
 		usage = usage + excluded.usage,
 		updated_at = excluded.updated_at;
-	`, team, user, date, karma, time.Now(), time.Now())
+	`, team, user, IsoDate(date), karma, time.Now(), time.Now())
 	if err != nil {
 		log.Error("Could not Insert or Update karma.", team, user, date, karma, err)
 		return 0, err

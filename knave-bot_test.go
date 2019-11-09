@@ -14,26 +14,26 @@ import (
 
 const testDB = "var/test/functional.db"
 
-func setupDB(datasource string) (karma.DAO, error) {
+func setupDB(datasource string) (karma.DAO, karma.DailyDao, error) {
 	if err := os.RemoveAll(datasource); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	db, err := karma.InitDB(datasource)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return karma.NewDao(db), nil
+	return karma.NewDao(db), karma.NewDailyDao(db), nil
 }
 
 func setup(t *testing.T) *gin.Engine {
-	dao, err := setupDB(testDB)
+	dao, dailyDao, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	insult := shakespeare.New("insult", "", nil)
 	compliment := shakespeare.New("compliment", "", nil)
-	knave, karma := initKarma(insult, compliment, dao)
+	knave, karma := initKarma(insult, compliment, dao, dailyDao)
 	r := initGin()
 	BindRoutes(r, knave, karma)
 	return r

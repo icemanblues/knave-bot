@@ -10,13 +10,8 @@ import (
 	"github.com/icemanblues/knave-bot/slack"
 )
 
-// SingleLimit one time karma swings are capped at 5 (default)
-const SingleLimit int = 5
-
-// DailyLimit this is the default daily limit for giving/ taking karma
-const DailyLimit int = 25
-
 // TODO: Probably need a processor config object to contain all of these customizations
+
 // do we want to make this an enum, a struct with these fields?
 const help string = "help"
 const me string = "me"
@@ -35,19 +30,24 @@ var commands = map[string]struct{}{
 	top:    struct{}{},
 }
 
+// SingleLimit one time karma swings are capped at 5 (default)
+const SingleLimit int = 5
+
+// DailyLimit this is the default daily limit for giving/ taking karma
+const DailyLimit int = 25
+
+// used by top function as guard rails
+const topUserDefault = 3
+
+// used by top function as guard rails
+const topUserMax = 10
+
 // Abs absolute value of an int
 func Abs(x int) int {
 	if x < 0 {
 		return -x
 	}
 	return x
-}
-
-const layout string = "2006-01-02"
-
-// IsoDate converts a time object to 2006-01-02 format
-func IsoDate(t time.Time) string {
-	return t.Format(layout)
 }
 
 // Processor processes slash-commands into slack responses
@@ -245,9 +245,6 @@ func (p SlackProcessor) status(team, callee string, words []string) (*slack.Resp
 	p.Salutation(k, att)
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
-
-const topUserDefault = 3
-const topUserMax = 10
 
 func (p SlackProcessor) top(team string, words []string) (*slack.Response, error) {
 	n, _ := parseArgInt(words, 1, topUserDefault)
