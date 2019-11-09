@@ -2,6 +2,7 @@ package karma
 
 import (
 	"testing"
+	"time"
 
 	"github.com/icemanblues/knave-bot/slack"
 	"github.com/stretchr/testify/assert"
@@ -54,6 +55,32 @@ func TestStringAttachment(t *testing.T) {
 				assert.NotNil(t, actual)
 				assert.Equal(t, *test.expected, *actual)
 			}
+		})
+	}
+}
+
+func TestIsoDate(t *testing.T) {
+	testcases := []struct {
+		name     string
+		date     time.Time
+		expected string
+	}{
+		{
+			name:     "November 9th",
+			date:     time.Date(2019, time.November, 9, 0, 0, 0, 0, time.Local),
+			expected: "2019-11-09",
+		},
+		{
+			name:     "New Year",
+			date:     time.Date(2020, time.January, 1, 0, 0, 0, 0, time.Local),
+			expected: "2020-01-01",
+		},
+	}
+
+	for _, test := range testcases {
+		t.Run(test.name, func(t *testing.T) {
+			actual := IsoDate(test.date)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }
