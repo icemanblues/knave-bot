@@ -209,16 +209,17 @@ func (p SlackProcessor) me(team, userID string) (*slack.Response, error) {
 		return nil, err
 	}
 
-	// TODO: display how much daily karma is available
-	// Need to make sure that time.Now is using yyyy-MM-dd format
-	// usage, err := p.dailyDao.GetDaily(team, userID, time.Now())
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// available := DailyLimit - usage
+	// daily usage check
+	usage, err := p.dailyDao.GetDaily(team, userID, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	available := DailyLimit - usage
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	UserStatus(userID, k, msg)
+	msg.WriteString("\n")
+	UserDailyLimit(usage, available, msg)
 	p.Salutation(k, att)
 	return slack.DirectResponse(msg.String(), att.String()), nil
 }
@@ -305,16 +306,14 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
-	// TODO: Check daily usage before attempting to Update
-	// Need to make sure that time.Now() is using yyyy-mm-dd
-	u, err := p.dailyDao.GetDaily(team, target, time.Now())
+	// daily usage check
+	usage, err := p.dailyDao.GetDaily(team, target, time.Now())
 	if err != nil {
 		return nil, err
 	}
-	available := DailyLimit - u
+	available := DailyLimit - usage
 	if available < delta {
-		// return an error message
-
+		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
 	}
 
 	k, err := p.dao.UpdateKarma(team, target, delta)
@@ -356,16 +355,14 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
-	// TODO: Check daily usage before attempting to Update
-	// Need to make sure that time.Now() is using yyyy-mm-dd
-	u, err := p.dailyDao.GetDaily(team, target, time.Now())
+	// daily usage check
+	usage, err := p.dailyDao.GetDaily(team, target, time.Now())
 	if err != nil {
 		return nil, err
 	}
-	available := DailyLimit - u
+	available := DailyLimit - usage
 	if available < delta {
-		// return an error message
-
+		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
 	}
 
 	k, err := p.dao.UpdateKarma(team, target, -delta)

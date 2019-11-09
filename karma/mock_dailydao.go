@@ -23,14 +23,7 @@ func (m MockDailyDao) UpdateDaily(team, user string, date time.Time, karma int) 
 
 // HappyDailyDao .
 func HappyDailyDao() *MockDailyDao {
-	return &MockDailyDao{
-		GetDailyMock: func(team, user string, date time.Time) (int, error) {
-			return 0, nil
-		},
-		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
-			return karma + 1, nil
-		},
-	}
+	return FullDailyDao(0)
 }
 
 // SadDailyDao .
@@ -41,6 +34,18 @@ func SadDailyDao() *MockDailyDao {
 		},
 		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
 			return 0, errors.New("UpdateDailyMock")
+		},
+	}
+}
+
+// FullDailyDao .
+func FullDailyDao(usage int) *MockDailyDao {
+	return &MockDailyDao{
+		GetDailyMock: func(team, user string, date time.Time) (int, error) {
+			return usage, nil
+		},
+		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
+			return karma + usage, nil
 		},
 	}
 }

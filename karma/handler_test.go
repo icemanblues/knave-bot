@@ -271,7 +271,7 @@ func TestMe(t *testing.T) {
 			form:     makeForm("me"),
 			code:     200,
 			expected: slack.DirectResponse(
-				"<@UCALLER> has 5 karma.",
+				"<@UCALLER> has 5 karma.\nYou have given/taken 0 karma with 25 remaining today.",
 				"compliment"),
 		},
 		{

@@ -380,7 +380,7 @@ func TestProcessMe(t *testing.T) {
 			name:         "me",
 			command:      command("me"),
 			responseType: slack.ResponseType.Ephemeral,
-			text:         "<@UCALLER> has 5 karma.",
+			text:         "<@UCALLER> has 5 karma.\nYou have given/taken 0 karma with 25 remaining today.",
 		},
 	}
 
@@ -509,6 +509,29 @@ func TestProcessSubtract(t *testing.T) {
 			command:      command("-- yikes"),
 			responseType: slack.ResponseType.Ephemeral,
 			text:         msgInvalidUser,
+		},
+	}
+
+	for _, test := range testcases {
+		processHelper(t, p, test)
+	}
+}
+
+func TestProcessDailyLimit(t *testing.T) {
+	p := mockProcessor(HappyDao(), FullDailyDao(DailyLimit))
+	msgFull := "Ah ah ah! The daily limit is 25 and you've given/taken 25 karma already. Only 0 remaining"
+	testcases := []ProcessTestCase{
+		{
+			name:         "--",
+			command:      command("-- <@USER> 4"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgFull,
+		},
+		{
+			name:         "++",
+			command:      command("++ <@USER> 3"),
+			responseType: slack.ResponseType.Ephemeral,
+			text:         msgFull,
 		},
 	}
 

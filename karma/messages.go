@@ -77,9 +77,21 @@ const msgSubtractMissingTarget = "From whom do you want to take karma away?"
 const msgSubtractSelfTarget = "Do you have something to confess? Why remove your own karma?"
 const msgSubtractCantAdd = "Negative karma doesn't make sense. Please use positive numbers!"
 
+const tmplOverDailyLimit = "Ah ah ah! The daily limit is %v and you've given/taken %v karma already. Only %v remaining"
+
+// MsgOverDailyLimit generates daily limit error message (string)
+func MsgOverDailyLimit(limit, usage, remainder int) string {
+	return fmt.Sprintf(tmplOverDailyLimit, limit, usage, remainder)
+}
+
 // UserStatus appends the User's Karma status
 func UserStatus(userID string, k int, sb *strings.Builder) {
 	sb.WriteString(fmt.Sprintf("<@%s> has %v karma.", userID, k))
+}
+
+// UserDailyLimit appends the remaining daily limits
+func UserDailyLimit(usage, remaining int, sb *strings.Builder) {
+	sb.WriteString(fmt.Sprintf("You have given/taken %v karma with %v remaining today.", usage, remaining))
 }
 
 // Salutation appends a Salutation (insult or compliment)
