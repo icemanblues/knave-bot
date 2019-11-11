@@ -12,7 +12,7 @@ type MockDAO struct {
 	GetKarmaMock    func(team, user string) (int, error)
 	UpdateKarmaMock func(team, user string, delta int) (int, error)
 	DeleteKarmaMock func(team, user string) (int, error)
-	UsageMock       func(*slack.CommandData, *slack.Response) error
+	UsageMock       func(slack.CommandData, slack.Response) error
 	TopMock         func(team string, n int) ([]UserKarma, error)
 }
 
@@ -32,7 +32,7 @@ func (m MockDAO) DeleteKarma(team, user string) (int, error) {
 }
 
 // Usage .
-func (m MockDAO) Usage(d *slack.CommandData, r *slack.Response) error {
+func (m MockDAO) Usage(d slack.CommandData, r slack.Response) error {
 	return m.UsageMock(d, r)
 }
 
@@ -42,8 +42,8 @@ func (m MockDAO) Top(team string, n int) ([]UserKarma, error) {
 }
 
 // HappyDao factory method for a mock dao that will always succeed
-func HappyDao() *MockDAO {
-	return &MockDAO{
+func HappyDao() MockDAO {
+	return MockDAO{
 		GetKarmaMock: func(team, user string) (int, error) {
 			return 5, nil
 		},
@@ -53,7 +53,7 @@ func HappyDao() *MockDAO {
 		DeleteKarmaMock: func(team, user string) (int, error) {
 			return 0, nil
 		},
-		UsageMock: func(d *slack.CommandData, r *slack.Response) error {
+		UsageMock: func(d slack.CommandData, r slack.Response) error {
 			return nil
 		},
 		TopMock: func(team string, n int) ([]UserKarma, error) {
@@ -69,8 +69,8 @@ func HappyDao() *MockDAO {
 }
 
 // SadDao factory method for a mock dao that will always fail with an error
-func SadDao() *MockDAO {
-	return &MockDAO{
+func SadDao() MockDAO {
+	return MockDAO{
 		GetKarmaMock: func(team, user string) (int, error) {
 			return 0, errors.New("GetKarmaMock")
 		},
@@ -80,7 +80,7 @@ func SadDao() *MockDAO {
 		DeleteKarmaMock: func(team, user string) (int, error) {
 			return 0, errors.New("DeleteKarmaMock")
 		},
-		UsageMock: func(d *slack.CommandData, r *slack.Response) error {
+		UsageMock: func(d slack.CommandData, r slack.Response) error {
 			return errors.New("UsageMock")
 		},
 		TopMock: func(team string, n int) ([]UserKarma, error) {

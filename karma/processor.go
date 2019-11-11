@@ -53,7 +53,7 @@ func Abs(x int) int {
 
 // Processor processes slash-commands into slack responses
 type Processor interface {
-	Process(cd *slack.CommandData) (*slack.Response, error)
+	Process(cd slack.CommandData) (slack.Response, error)
 }
 
 // SlackProcessor an implementation of KarmaProcessor that uses SQLite
@@ -65,12 +65,12 @@ type SlackProcessor struct {
 }
 
 // NewProcessor factory method
-func NewProcessor(dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) *SlackProcessor {
-	return &SlackProcessor{dao, dailyDao, insult, compliment}
+func NewProcessor(dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) SlackProcessor {
+	return SlackProcessor{dao, dailyDao, insult, compliment}
 }
 
 // Process handles Karma processing from slack API
-func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
+func (p SlackProcessor) Process(c slack.CommandData) (slack.Response, error) {
 	if len(c.Text) == 0 {
 		return p.help()
 	}
@@ -97,7 +97,7 @@ func (p SlackProcessor) Process(c *slack.CommandData) (*slack.Response, error) {
 	return p.help()
 }
 
-func (p SlackProcessor) processCommand(words []string, c *slack.CommandData) (*slack.Response, error) {
+func (p SlackProcessor) processCommand(words []string, c slack.CommandData) (slack.Response, error) {
 	switch words[0] {
 	case help:
 		return p.help()
@@ -200,20 +200,20 @@ func parseArgUser(words []string, idx int) (string, bool) {
 	return slack.IsSlackUser(s)
 }
 
-func (p SlackProcessor) help() (*slack.Response, error) {
+func (p SlackProcessor) help() (slack.Response, error) {
 	return responseHelp, nil
 }
 
-func (p SlackProcessor) me(team, userID string) (*slack.Response, error) {
+func (p SlackProcessor) me(team, userID string) (slack.Response, error) {
 	k, err := p.dao.GetKarma(team, userID)
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 
 	// daily usage check
 	usage, err := p.dailyDao.GetDaily(team, userID, time.Now())
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 	available := DailyLimit - usage
 
@@ -225,7 +225,7 @@ func (p SlackProcessor) me(team, userID string) (*slack.Response, error) {
 	return slack.DirectResponse(msg.String(), att.String()), nil
 }
 
-func (p SlackProcessor) status(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) status(team, callee string, words []string) (slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgMissingName, cmdStatus), nil
@@ -238,7 +238,7 @@ func (p SlackProcessor) status(team, callee string, words []string) (*slack.Resp
 
 	k, err := p.dao.GetKarma(team, target)
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
@@ -248,7 +248,7 @@ func (p SlackProcessor) status(team, callee string, words []string) (*slack.Resp
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (p SlackProcessor) top(team string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) top(team string, words []string) (slack.Response, error) {
 	n, _ := parseArgInt(words, 1, topUserDefault)
 
 	// no negatives are allowed
@@ -262,7 +262,7 @@ func (p SlackProcessor) top(team string, words []string) (*slack.Response, error
 
 	topUsers, err := p.dao.Top(team, n)
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 
 	if len(topUsers) == 0 {
@@ -281,7 +281,7 @@ func (p SlackProcessor) top(team string, words []string) (*slack.Response, error
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (p SlackProcessor) add(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) add(team, callee string, words []string) (slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgAddMissingTarget, cmdAdd), nil
@@ -310,7 +310,7 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 	// daily usage check
 	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 	available := DailyLimit - usage
 	if available < delta {
@@ -320,12 +320,12 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
 	k, err := p.dao.UpdateKarma(team, target, delta)
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
 	if err != nil {
 		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
-		return nil, err
+		return slack.Response{}, err
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
@@ -335,7 +335,7 @@ func (p SlackProcessor) add(team, callee string, words []string) (*slack.Respons
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
-func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Response, error) {
+func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Response, error) {
 	name, ok := parseArg(words, 1)
 	if !ok {
 		return slack.DirectResponse(msgSubtractMissingTarget, cmdSub), nil
@@ -365,7 +365,7 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 	// daily usage check
 	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 	available := DailyLimit - usage
 	if available < delta {
@@ -375,12 +375,12 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (*slack.Re
 	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
 	k, err := p.dao.UpdateKarma(team, target, -delta)
 	if err != nil {
-		return nil, err
+		return slack.Response{}, err
 	}
 	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
 	if err != nil {
 		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
-		return nil, err
+		return slack.Response{}, err
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}

@@ -27,7 +27,7 @@ type SQLiteHandler struct {
 }
 
 // GetKarma handler method to read the current karma for an individual
-func (h *SQLiteHandler) GetKarma(c *gin.Context) {
+func (h SQLiteHandler) GetKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -42,7 +42,7 @@ func (h *SQLiteHandler) GetKarma(c *gin.Context) {
 }
 
 // AddKarma handler method to add (or subtract) karma from an individual
-func (h *SQLiteHandler) AddKarma(c *gin.Context) {
+func (h SQLiteHandler) AddKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -64,7 +64,7 @@ func (h *SQLiteHandler) AddKarma(c *gin.Context) {
 }
 
 // DelKarma handler method to delete (reset) karma to zer0
-func (h *SQLiteHandler) DelKarma(c *gin.Context) {
+func (h SQLiteHandler) DelKarma(c *gin.Context) {
 	team := c.Param("team")
 	user := c.Param("user")
 
@@ -79,7 +79,7 @@ func (h *SQLiteHandler) DelKarma(c *gin.Context) {
 }
 
 // TopKarma returns the top n users for a given team
-func (h *SQLiteHandler) TopKarma(c *gin.Context) {
+func (h SQLiteHandler) TopKarma(c *gin.Context) {
 	team := c.Param("team")
 
 	top := c.Query("top")
@@ -100,8 +100,8 @@ func (h *SQLiteHandler) TopKarma(c *gin.Context) {
 var responseUnknownError = slack.ErrorResponse("Oh no! Looks like we're experiencing some technical difficulties")
 
 // SlashKarma handler method for the `/karma` slash-command
-func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
-	data := &slack.CommandData{
+func (h SQLiteHandler) SlashKarma(c *gin.Context) {
+	data := slack.CommandData{
 		Command:      c.PostForm("command"),
 		Text:         c.PostForm("text"),
 		ResponseURL:  c.PostForm("response_url"),
@@ -128,8 +128,8 @@ func (h *SQLiteHandler) SlashKarma(c *gin.Context) {
 }
 
 // NewHandler factory method
-func NewHandler(proc Processor, dao DAO) *SQLiteHandler {
-	return &SQLiteHandler{
+func NewHandler(proc Processor, dao DAO) SQLiteHandler {
+	return SQLiteHandler{
 		proc: proc,
 		dao:  dao,
 	}

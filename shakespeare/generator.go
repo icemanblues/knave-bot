@@ -53,8 +53,8 @@ func (g FormulaGenerator) Generate(delim string) string {
 }
 
 // New constructs a FormulaGenerator
-func New(pre, post string, cols [][]string) *FormulaGenerator {
-	return &FormulaGenerator{
+func New(pre, post string, cols [][]string) FormulaGenerator {
+	return FormulaGenerator{
 		prefix:  pre,
 		postfix: post,
 		columns: cols,

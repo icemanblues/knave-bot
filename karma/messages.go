@@ -18,7 +18,7 @@ const cmdTop = "/karma top"
 
 // Slack Reponses
 
-var responseHelp = &slack.Response{
+var responseHelp = slack.Response{
 	ResponseType: slack.ResponseType.Ephemeral,
 	Text:         "",
 	Attachments: []slack.Attachments{

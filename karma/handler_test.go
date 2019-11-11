@@ -174,7 +174,7 @@ type KarmaTestCase struct {
 	dailyDao DailyDao
 	form     url.Values
 	code     int
-	expected *slack.Response
+	expected slack.Response
 }
 
 func makeForm(text string) url.Values {
@@ -204,7 +204,7 @@ func karmaTestRunner(t *testing.T, testcases []KarmaTestCase) {
 			// assert
 			assert.Nil(t, err)
 			assert.Equal(t, test.code, w.Code)
-			assert.Equal(t, test.expected, &actual)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }

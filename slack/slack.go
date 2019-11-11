@@ -65,16 +65,16 @@ func NewAttachments(s string) []Attachments {
 }
 
 // ChannelResponse factory method for a response that should be displayed to the entire channel
-func ChannelResponse(msg string) *Response {
-	return &Response{
+func ChannelResponse(msg string) Response {
+	return Response{
 		ResponseType: ResponseType.InChannel,
 		Text:         msg,
 	}
 }
 
 // ChannelAttachmentsResponse factory method for a response (with attachment) to the channel
-func ChannelAttachmentsResponse(msg, att string) *Response {
-	return &Response{
+func ChannelAttachmentsResponse(msg, att string) Response {
+	return Response{
 		ResponseType: ResponseType.InChannel,
 		Text:         msg,
 		Attachments:  NewAttachments(att),
@@ -82,8 +82,8 @@ func ChannelAttachmentsResponse(msg, att string) *Response {
 }
 
 // DirectResponse factory method for a response (with attachment) to the callee
-func DirectResponse(msg, att string) *Response {
-	return &Response{
+func DirectResponse(msg, att string) Response {
+	return Response{
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
 		Attachments:  NewAttachments(att),
@@ -91,8 +91,8 @@ func DirectResponse(msg, att string) *Response {
 }
 
 // ErrorResponse factory method for a response that should be displayed only to the callee
-func ErrorResponse(msg string) *Response {
-	return &Response{
+func ErrorResponse(msg string) Response {
+	return Response{
 		ResponseType: ResponseType.Ephemeral,
 		Text:         msg,
 	}

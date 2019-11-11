@@ -166,8 +166,8 @@ func TestParseArgUser(t *testing.T) {
 	}
 }
 
-func command(text string) *slack.CommandData {
-	return &slack.CommandData{
+func command(text string) slack.CommandData {
+	return slack.CommandData{
 		Command: "karma",
 		UserID:  "UCALLER",
 		Text:    text,
@@ -288,7 +288,7 @@ func TestAddSubCmdAlias(t *testing.T) {
 
 type ProcessTestCase struct {
 	name         string
-	command      *slack.CommandData
+	command      slack.CommandData
 	responseType string
 	text         string
 	attach       bool
@@ -672,11 +672,11 @@ func TestProcessAliasAddSubNumber(t *testing.T) {
 func TestProcessError(t *testing.T) {
 	testcases := []struct {
 		name    string
-		command *slack.CommandData
+		command slack.CommandData
 	}{
 		{
 			name: "status",
-			command: &slack.CommandData{
+			command: slack.CommandData{
 				Text:   "status <@USER>",
 				UserID: "UCALLER",
 			},
@@ -687,7 +687,7 @@ func TestProcessError(t *testing.T) {
 		p := mockProcessor(SadDao(), SadDailyDao())
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
-			assert.Nil(t, actual)
+			assert.Equal(t, slack.Response{}, actual)
 			assert.NotNil(t, err)
 		})
 	}

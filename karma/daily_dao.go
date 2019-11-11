@@ -26,7 +26,7 @@ func IsoDate(t time.Time) string {
 }
 
 // GetDaily return the amount of karma the team/user has gives/taken for a day
-func (dao *SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, error) {
+func (dao SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, error) {
 	row := dao.db.QueryRow(`
 		SELECT du.usage
 		FROM   daily_usage du
@@ -46,7 +46,7 @@ func (dao *SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, err
 }
 
 // UpdateDaily adds karma to team/user's daily usage count
-func (dao *SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
+func (dao SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
 	_, err := dao.db.Exec(`
 		INSERT INTO daily_usage
 		(team, user, daily, usage, created_at, updated_at)
@@ -65,6 +65,6 @@ func (dao *SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma 
 }
 
 // NewDailyDao factory method
-func NewDailyDao(db *sql.DB) *SQLiteDailyDAO {
-	return &SQLiteDailyDAO{db}
+func NewDailyDao(db *sql.DB) SQLiteDailyDAO {
+	return SQLiteDailyDAO{db}
 }

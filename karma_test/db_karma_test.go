@@ -148,8 +148,8 @@ func TestUsage(t *testing.T) {
 	assert.Zero(t, rowCount)
 
 	// insert default values
-	cd := &slack.CommandData{}
-	res := &slack.Response{}
+	cd := slack.CommandData{}
+	res := slack.Response{}
 	dao.Usage(cd, res)
 	rowCount = rowCountUsage(t, db)
 	assert.Equal(t, 1, rowCount)
@@ -160,7 +160,7 @@ func TestUsage(t *testing.T) {
 	assert.Equal(t, 2, rowCount)
 
 	// insert direct message
-	cd = &slack.CommandData{
+	cd = slack.CommandData{
 		Command:      "karma",
 		Text:         "me",
 		EnterpriseID: "enterprise",
@@ -207,13 +207,13 @@ func TestTopKarma(t *testing.T) {
 	// insert default values
 	team := "avengers"
 	avengers := []karma.UserKarma{
-		{"UCaptAmerica", 704},
-		{"UHulk", 604},
-		{"UThor", 1704},
-		{"UDrStange", 505},
-		{"UCaptMarvel", 9000},
-		{"UIronman", 1400},
-		{"USpiderman", 704},
+		{User: "UCaptAmerica", Karma: 704},
+		{User: "UHulk", Karma: 604},
+		{User: "UThor", Karma: 1704},
+		{User: "UDrStange", Karma: 505},
+		{User: "UCaptMarvel", Karma: 9000},
+		{User: "UIronman", Karma: 1400},
+		{User: "USpiderman", Karma: 704},
 	}
 	for _, uk := range avengers {
 		k, err := dao.UpdateKarma(team, uk.User, uk.Karma)

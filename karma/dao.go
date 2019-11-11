@@ -20,7 +20,7 @@ type DAO interface {
 	GetKarma(team, user string) (int, error)
 	UpdateKarma(team, user string, delta int) (int, error)
 	DeleteKarma(team, user string) (int, error)
-	Usage(*slack.CommandData, *slack.Response) error
+	Usage(slack.CommandData, slack.Response) error
 	Top(team string, n int) ([]UserKarma, error)
 }
 
@@ -30,7 +30,7 @@ type SQLiteDAO struct {
 }
 
 // GetKarma returns the karma value for the user in a given team
-func (dao *SQLiteDAO) GetKarma(team, user string) (int, error) {
+func (dao SQLiteDAO) GetKarma(team, user string) (int, error) {
 	row := dao.db.QueryRow(`
 		SELECT k.karma
 		FROM   karma k
@@ -49,7 +49,7 @@ func (dao *SQLiteDAO) GetKarma(team, user string) (int, error) {
 }
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
-func (dao *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
+func (dao SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
 	_, err := dao.db.Exec(`
 		INSERT INTO karma
 		(team, user, karma, created_at, updated_at)
@@ -68,7 +68,7 @@ func (dao *SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error
 }
 
 // DeleteKarma resets all karma for a given user in a given team to zer0
-func (dao *SQLiteDAO) DeleteKarma(team, user string) (int, error) {
+func (dao SQLiteDAO) DeleteKarma(team, user string) (int, error) {
 	_, err := dao.db.Exec(`
 		DELETE FROM karma
 		WHERE  team = ?
@@ -99,7 +99,7 @@ func stringAttachment(att []slack.Attachments) *string {
 }
 
 // Usage tracks the usage of karma by pairing the request with the response
-func (dao *SQLiteDAO) Usage(data *slack.CommandData, res *slack.Response) error {
+func (dao SQLiteDAO) Usage(data slack.CommandData, res slack.Response) error {
 	s := stringAttachment(res.Attachments)
 
 	_, err := dao.db.Exec(`
@@ -113,7 +113,7 @@ func (dao *SQLiteDAO) Usage(data *slack.CommandData, res *slack.Response) error 
 }
 
 // Top returns the top n users (ordered by karma) from a given team
-func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
+func (dao SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 	rows, err := dao.db.Query(`
 		SELECT		k.user, 
 					k.karma
@@ -146,6 +146,6 @@ func (dao *SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 }
 
 // NewDao factory method
-func NewDao(db *sql.DB) *SQLiteDAO {
-	return &SQLiteDAO{db}
+func NewDao(db *sql.DB) SQLiteDAO {
+	return SQLiteDAO{db}
 }

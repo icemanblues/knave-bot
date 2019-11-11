@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupHandler() *GinHandler {
+func setupHandler() GinHandler {
 	return NewHandler(shakespeare.New("insult", "", nil),
 		shakespeare.New("compliment", "", nil))
 }
 
-func setupGin(h *GinHandler) *gin.Engine {
+func setupGin(h GinHandler) *gin.Engine {
 	r := gin.Default()
 	g := r.Group("/knavebot")
 	BindRoutes(g, h)
