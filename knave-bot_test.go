@@ -33,7 +33,7 @@ func setup(t *testing.T) *gin.Engine {
 
 	insult := shakespeare.New("insult", "", nil)
 	compliment := shakespeare.New("compliment", "", nil)
-	knave, karma := initKarma(insult, compliment, dao, dailyDao)
+	knave, karma := initKarma(insult, compliment, karma.DefaultConfig, dao, dailyDao)
 	r := initGin()
 	BindRoutes(r, knave, karma)
 	return r

@@ -3,7 +3,7 @@ package karma
 import "github.com/icemanblues/knave-bot/shakespeare"
 
 func mockProcessor(dao DAO, dailyDao DailyDao) SlackProcessor {
-	return NewProcessor(dao, dailyDao,
+	return NewProcessor(DefaultConfig, dao, dailyDao,
 		shakespeare.New("insult", "", nil),
 		shakespeare.New("compliment", "", nil))
 }

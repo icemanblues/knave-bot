@@ -518,7 +518,7 @@ func TestProcessSubtract(t *testing.T) {
 }
 
 func TestProcessDailyLimit(t *testing.T) {
-	p := mockProcessor(HappyDao(), FullDailyDao(DailyLimit))
+	p := mockProcessor(HappyDao(), FullDailyDao(DefaultConfig.DailyLimit))
 	msgFull := "Ah ah ah! The daily limit is 25 and you've given/taken 25 karma already. Only 0 remaining"
 	testcases := []ProcessTestCase{
 		{

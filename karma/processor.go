@@ -11,38 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO: Probably need a processor config object to contain all of these customizations
-
-// do we want to make this an enum, a struct with these fields?
-const help string = "help"
-const me string = "me"
-const status string = "status"
-const add string = "++"
-const sub string = "--"
-const top string = "top"
-
-// Commands a set of the support commands by this processor
-var commands = map[string]struct{}{
-	help:   struct{}{},
-	me:     struct{}{},
-	status: struct{}{},
-	add:    struct{}{},
-	sub:    struct{}{},
-	top:    struct{}{},
-}
-
-// SingleLimit one time karma swings are capped at 5 (default)
-const SingleLimit int = 5
-
-// DailyLimit this is the default daily limit for giving/ taking karma
-const DailyLimit int = 25
-
-// used by top function as guard rails
-const topUserDefault = 3
-
-// used by top function as guard rails
-const topUserMax = 10
-
 // Abs absolute value of an int
 func Abs(x int) int {
 	if x < 0 {
@@ -58,6 +26,7 @@ type Processor interface {
 
 // SlackProcessor an implementation of KarmaProcessor that uses SQLite
 type SlackProcessor struct {
+	config     ProcConfig
 	dao        DAO
 	dailyDao   DailyDao
 	insult     shakespeare.Generator
@@ -65,8 +34,8 @@ type SlackProcessor struct {
 }
 
 // NewProcessor factory method
-func NewProcessor(dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) SlackProcessor {
-	return SlackProcessor{dao, dailyDao, insult, compliment}
+func NewProcessor(config ProcConfig, dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) SlackProcessor {
+	return SlackProcessor{config, dao, dailyDao, insult, compliment}
 }
 
 // Process handles Karma processing from slack API
@@ -80,17 +49,17 @@ func (p SlackProcessor) Process(c slack.CommandData) (slack.Response, error) {
 		return p.help()
 	}
 
-	if _, ok := commands[words[0]]; ok {
+	if _, ok := Commands[words[0]]; ok {
 		return p.processCommand(words, c)
 	}
 
 	words = userCmdAlias(words)
-	if _, ok := commands[words[0]]; ok {
+	if _, ok := Commands[words[0]]; ok {
 		return p.processCommand(words, c)
 	}
 
 	words = addSubCmdAlias(words)
-	if _, ok := commands[words[0]]; ok {
+	if _, ok := Commands[words[0]]; ok {
 		return p.processCommand(words, c)
 	}
 
@@ -215,7 +184,7 @@ func (p SlackProcessor) me(team, userID string) (slack.Response, error) {
 	if err != nil {
 		return slack.Response{}, err
 	}
-	available := DailyLimit - usage
+	available := p.config.DailyLimit - usage
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
 	UserStatus(userID, k, msg)
@@ -249,15 +218,15 @@ func (p SlackProcessor) status(team, callee string, words []string) (slack.Respo
 }
 
 func (p SlackProcessor) top(team string, words []string) (slack.Response, error) {
-	n, _ := parseArgInt(words, 1, topUserDefault)
+	n, _ := parseArgInt(words, 1, p.config.TopUserDefault)
 
 	// no negatives are allowed
 	if n <= 0 {
-		n = topUserDefault
+		n = p.config.TopUserDefault
 	}
 	// anything larger than 10 would look funny
-	if n > topUserMax {
-		n = topUserMax
+	if n > p.config.TopUserMax {
+		n = p.config.TopUserMax
 	}
 
 	topUsers, err := p.dao.Top(team, n)
@@ -303,7 +272,7 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 	if delta < 0 {
 		return slack.ErrorResponse(msgAddCantRemove), nil
 	}
-	if delta > SingleLimit {
+	if delta > p.config.SingleLimit {
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
@@ -312,9 +281,9 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 	if err != nil {
 		return slack.Response{}, err
 	}
-	available := DailyLimit - usage
+	available := p.config.DailyLimit - usage
 	if available < delta {
-		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
+		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
 	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
@@ -358,7 +327,7 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 	if delta < 0 {
 		return slack.DirectResponse(msgSubtractCantAdd, cmdSub), nil
 	}
-	if delta > SingleLimit {
+	if delta > p.config.SingleLimit {
 		return slack.ErrorResponse(msgDeltaLimit), nil
 	}
 
@@ -367,9 +336,9 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 	if err != nil {
 		return slack.Response{}, err
 	}
-	available := DailyLimit - usage
+	available := p.config.DailyLimit - usage
 	if available < delta {
-		return slack.ErrorResponse(MsgOverDailyLimit(DailyLimit, usage, available)), nil
+		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
 	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
