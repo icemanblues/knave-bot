@@ -3,8 +3,8 @@ package karma
 import (
 	"errors"
 	"fmt"
-
 	"github.com/icemanblues/knave-bot/slack"
+	"time"
 )
 
 // MockDAO a mock dao for karma whose mock functions can be monkeypatched
@@ -14,6 +14,8 @@ type MockDAO struct {
 	DeleteKarmaMock func(team, user string) (int, error)
 	UsageMock       func(slack.CommandData, slack.Response) error
 	TopMock         func(team string, n int) ([]UserKarma, error)
+	GetDailyMock    func(team, user string, date time.Time) (int, error)
+	UpdateDailyMock func(team, user string, date time.Time, karma int) (int, error)
 }
 
 // GetKarma .
@@ -41,9 +43,19 @@ func (m MockDAO) Top(team string, n int) ([]UserKarma, error) {
 	return m.TopMock(team, n)
 }
 
-// HappyDao factory method for a mock dao that will always succeed
-func HappyDao() MockDAO {
-	return MockDAO{
+// GetDaily .
+func (m MockDAO) GetDaily(team, user string, date time.Time) (int, error) {
+	return m.GetDailyMock(team, user, date)
+}
+
+// UpdateDaily .
+func (m MockDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
+	return m.UpdateDailyMock(team, user, date, karma)
+}
+
+// NewMockDao constructor func for making mock dao
+func NewMockDao(usage int) MockDAO {
+		return MockDAO{
 		GetKarmaMock: func(team, user string) (int, error) {
 			return 5, nil
 		},
@@ -65,7 +77,23 @@ func HappyDao() MockDAO {
 			}
 			return r, nil
 		},
+		GetDailyMock: func(team, user string, date time.Time) (int, error) {
+			return usage, nil
+		},
+		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
+			return karma + usage, nil
+		},
 	}
+}
+
+// HappyDao factory method for a mock dao that will always succeed
+func HappyDao() MockDAO {
+	return NewMockDao(0)
+}
+
+// FullDailyDao factory method for a mock dao were all users are full on their daily limit
+func FullDailyDao() MockDAO {
+	return NewMockDao(DefaultConfig.DailyLimit)
 }
 
 // SadDao factory method for a mock dao that will always fail with an error
@@ -85,6 +113,12 @@ func SadDao() MockDAO {
 		},
 		TopMock: func(team string, n int) ([]UserKarma, error) {
 			return nil, errors.New("TopMock")
+		},
+		GetDailyMock: func(team, user string, date time.Time) (int, error) {
+			return 0, errors.New("GetDailyMock")
+		},
+		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
+			return 0, errors.New("UpdateDailyMock")
 		},
 	}
 }

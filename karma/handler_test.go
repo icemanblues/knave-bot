@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setup(dao DAO, dailyDao DailyDao) *gin.Engine {
-	proc := mockProcessor(dao, dailyDao)
+func setup(dao DAO) *gin.Engine {
+	proc := mockProcessor(dao)
 	h := NewHandler(proc, dao)
 
 	r := gin.Default()
@@ -30,21 +30,18 @@ func TestGetKarma(t *testing.T) {
 	testcases := []struct {
 		name     string
 		dao      DAO
-		dailyDao DailyDao
 		code     int
 		expected string
 	}{
 		{
 			name:     "GetKarma",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			code:     200,
 			expected: "5",
 		},
 		{
 			name:     "GetKarma error",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			code:     500,
 			expected: "GetKarmaMock",
 		},
@@ -53,7 +50,7 @@ func TestGetKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao, test.dailyDao)
+			r := setup(test.dao)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -71,7 +68,6 @@ func TestAddKarma(t *testing.T) {
 	testcases := []struct {
 		name     string
 		dao      DAO
-		dailyDao DailyDao
 		delta    string
 		code     int
 		expected string
@@ -79,7 +75,6 @@ func TestAddKarma(t *testing.T) {
 		{
 			name:     "AddKarma",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			delta:    "5",
 			code:     200,
 			expected: "6",
@@ -87,7 +82,6 @@ func TestAddKarma(t *testing.T) {
 		{
 			name:     "AddKarma malformed delta",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			delta:    "Not-A-Number",
 			code:     400,
 			expected: "Please pass a valid integer. Not-A-Number",
@@ -95,7 +89,6 @@ func TestAddKarma(t *testing.T) {
 		{
 			name:     "AddKarma negative delta",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			delta:    "-2",
 			code:     200,
 			expected: "-1",
@@ -103,7 +96,6 @@ func TestAddKarma(t *testing.T) {
 		{
 			name:     "AddKarma error",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			delta:    "5",
 			code:     500,
 			expected: "UpdateKarmaMock",
@@ -113,7 +105,7 @@ func TestAddKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao, test.dailyDao)
+			r := setup(test.dao)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -131,21 +123,18 @@ func TestDelKarma(t *testing.T) {
 	testcases := []struct {
 		name     string
 		dao      DAO
-		dailyDao DailyDao
 		code     int
 		expected string
 	}{
 		{
 			name:     "DeleteKarma",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			code:     200,
 			expected: "0",
 		},
 		{
 			name:     "DeleteKarma error",
 			dao:      SadDao(),
-			dailyDao: HappyDailyDao(),
 			code:     500,
 			expected: "DeleteKarmaMock",
 		},
@@ -154,7 +143,7 @@ func TestDelKarma(t *testing.T) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao, nil)
+			r := setup(test.dao)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -171,7 +160,6 @@ func TestDelKarma(t *testing.T) {
 type KarmaTestCase struct {
 	name     string
 	dao      DAO
-	dailyDao DailyDao
 	form     url.Values
 	code     int
 	expected slack.Response
@@ -189,7 +177,7 @@ func karmaTestRunner(t *testing.T, testcases []KarmaTestCase) {
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
 			// setup
-			r := setup(test.dao, test.dailyDao)
+			r := setup(test.dao)
 
 			// undertest
 			w := httptest.NewRecorder()
@@ -242,7 +230,6 @@ func TestStatus(t *testing.T) {
 		{
 			name:     "status",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("status <@USER>"),
 			code:     200,
 			expected: slack.ChannelAttachmentsResponse(
@@ -252,7 +239,6 @@ func TestStatus(t *testing.T) {
 		{
 			name:     "error status",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			form:     makeForm("status <@USER>"),
 			code:     200,
 			expected: responseUnknownError,
@@ -267,7 +253,6 @@ func TestMe(t *testing.T) {
 		{
 			name:     "me",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("me"),
 			code:     200,
 			expected: slack.DirectResponse(
@@ -277,7 +262,6 @@ func TestMe(t *testing.T) {
 		{
 			name:     "error me",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			form:     makeForm("me"),
 			code:     200,
 			expected: responseUnknownError,
@@ -292,7 +276,6 @@ func TestAdd(t *testing.T) {
 		{
 			name:     "add",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("++ <@USER>"),
 			code:     200,
 			expected: slack.ChannelAttachmentsResponse(
@@ -302,7 +285,6 @@ func TestAdd(t *testing.T) {
 		{
 			name:     "add 2",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("++ <@USER> 2"),
 			code:     200,
 			expected: slack.ChannelAttachmentsResponse(
@@ -312,7 +294,6 @@ func TestAdd(t *testing.T) {
 		{
 			name:     "error add",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			form:     makeForm("++ <@USER>"),
 			code:     200,
 			expected: responseUnknownError,
@@ -327,7 +308,6 @@ func TestSubtract(t *testing.T) {
 		{
 			name:     "subtract",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("-- <@USER>"),
 			code:     200,
 			expected: slack.ChannelAttachmentsResponse(
@@ -337,7 +317,6 @@ func TestSubtract(t *testing.T) {
 		{
 			name:     "subtract 3",
 			dao:      HappyDao(),
-			dailyDao: HappyDailyDao(),
 			form:     makeForm("-- <@USER> 3"),
 			code:     200,
 			expected: slack.ChannelAttachmentsResponse(
@@ -347,7 +326,6 @@ func TestSubtract(t *testing.T) {
 		{
 			name:     "error subtract",
 			dao:      SadDao(),
-			dailyDao: SadDailyDao(),
 			form:     makeForm("-- <@USER>"),
 			code:     200,
 			expected: responseUnknownError,

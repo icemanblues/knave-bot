@@ -23,7 +23,6 @@ type Handler interface {
 type SQLiteHandler struct {
 	proc     Processor
 	dao      DAO
-	dailyDao DailyDao
 }
 
 // GetKarma handler method to read the current karma for an individual

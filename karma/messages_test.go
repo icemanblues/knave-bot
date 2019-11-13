@@ -1,7 +1,6 @@
 package karma
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,9 +35,7 @@ func TestUserStatus(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			sb := &strings.Builder{}
-			UserStatus(test.user, test.karma, sb)
-			actual := sb.String()
+			actual := MsgUserStatus(test.user, test.karma)
 			assert.Equal(t, test.expected, actual)
 		})
 	}
@@ -69,10 +66,8 @@ func TestSalutation(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			p := mockProcessor(HappyDao(), HappyDailyDao())
-			sb := &strings.Builder{}
-			p.Salutation(test.karma, sb)
-			actual := sb.String()
+			p := happyMockProcessor()
+			actual := p.Salutation(test.karma)
 			assert.Equal(t, test.expected, actual)
 		})
 	}

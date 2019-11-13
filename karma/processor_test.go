@@ -312,7 +312,7 @@ func processHelper(t *testing.T, p Processor, test ProcessTestCase) {
 }
 
 func TestProcessStatus(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "status",
@@ -340,7 +340,7 @@ func TestProcessStatus(t *testing.T) {
 }
 
 func TestProcessTop(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "top",
@@ -374,7 +374,7 @@ func TestProcessTop(t *testing.T) {
 }
 
 func TestProcessMe(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "me",
@@ -390,7 +390,7 @@ func TestProcessMe(t *testing.T) {
 }
 
 func TestProcessAdd(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "++",
@@ -454,7 +454,7 @@ func TestProcessAdd(t *testing.T) {
 }
 
 func TestProcessSubtract(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "--",
@@ -518,7 +518,7 @@ func TestProcessSubtract(t *testing.T) {
 }
 
 func TestProcessDailyLimit(t *testing.T) {
-	p := mockProcessor(HappyDao(), FullDailyDao(DefaultConfig.DailyLimit))
+	p := fullUsageMockProcessor()
 	msgFull := "Ah ah ah! The daily limit is 25 and you've given/taken 25 karma already. Only 0 remaining"
 	testcases := []ProcessTestCase{
 		{
@@ -541,7 +541,7 @@ func TestProcessDailyLimit(t *testing.T) {
 }
 
 func TestProcessHelp(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "help",
@@ -568,7 +568,7 @@ func TestProcessHelp(t *testing.T) {
 }
 
 func TestProcessAliasPlusPlus(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "USER ++",
@@ -590,7 +590,7 @@ func TestProcessAliasPlusPlus(t *testing.T) {
 }
 
 func TestProcessAliasMinusMinus(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "USER -- quantity",
@@ -618,7 +618,7 @@ func TestProcessAliasMinusMinus(t *testing.T) {
 }
 
 func TestProcessAliasAddSubNumber(t *testing.T) {
-	p := mockProcessor(HappyDao(), HappyDailyDao())
+	p := happyMockProcessor()
 	testcases := []ProcessTestCase{
 		{
 			name:         "USER three",
@@ -684,7 +684,7 @@ func TestProcessError(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		p := mockProcessor(SadDao(), SadDailyDao())
+		p := sadMockProcessor()
 		t.Run(test.name, func(t *testing.T) {
 			actual, err := p.Process(test.command)
 			assert.Equal(t, slack.Response{}, actual)
