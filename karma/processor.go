@@ -108,13 +108,13 @@ func addSubCmdAlias(words []string) []string {
 	d := strconv.Itoa(Abs(delta))
 
 	if delta > 0 {
-		w := []string{"++", words[1], d}
+		w := []string{add, words[1], d}
 		w = append(w, words[2:]...)
 		return w
 	}
 
 	// must be negative
-	w := []string{"--", words[1], d}
+	w := []string{sub, words[1], d}
 	w = append(w, words[2:]...)
 	return w
 }
@@ -170,7 +170,7 @@ func parseArgUser(words []string, idx int) (string, bool) {
 }
 
 func (p SlackProcessor) help() (slack.Response, error) {
-	return responseHelp, nil
+	return ResponseHelp, nil
 }
 
 func (p SlackProcessor) me(team, userID string) (slack.Response, error) {

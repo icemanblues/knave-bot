@@ -216,21 +216,21 @@ func TestHelp(t *testing.T) {
 			dao:      HappyDao(),
 			form:     makeForm(""),
 			code:     200,
-			expected: responseHelp,
+			expected: ResponseHelp,
 		},
 		{
 			name:     "help",
 			dao:      HappyDao(),
 			form:     makeForm("help"),
 			code:     200,
-			expected: responseHelp,
+			expected: ResponseHelp,
 		},
 		{
 			name:     "error help",
 			dao:      SadDao(),
 			form:     makeForm("help"),
 			code:     200,
-			expected: responseHelp,
+			expected: ResponseHelp,
 		},
 	}
 

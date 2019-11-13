@@ -547,19 +547,19 @@ func TestProcessHelp(t *testing.T) {
 			name:         "help",
 			command:      command("help"),
 			responseType: slack.ResponseType.Ephemeral,
-			text:         responseHelp.Text,
+			text:         ResponseHelp.Text,
 		},
 		{
 			name:         "help extra text",
 			command:      command("help extra text"),
 			responseType: slack.ResponseType.Ephemeral,
-			text:         responseHelp.Text,
+			text:         ResponseHelp.Text,
 		},
 		{
 			name:         "help empty",
 			command:      command(""),
 			responseType: slack.ResponseType.Ephemeral,
-			text:         responseHelp.Text,
+			text:         ResponseHelp.Text,
 		}}
 
 	for _, test := range testcases {
@@ -653,14 +653,14 @@ func TestProcessAliasAddSubNumber(t *testing.T) {
 		{
 			name:         "USER 0",
 			command:      command("<@USER> 0"),
-			responseType: responseHelp.ResponseType,
-			text:         responseHelp.Text,
+			responseType: ResponseHelp.ResponseType,
+			text:         ResponseHelp.Text,
 		},
 		{
 			name:         "0 USER",
 			command:      command("0 <@USER>"),
-			responseType: responseHelp.ResponseType,
-			text:         responseHelp.Text,
+			responseType: ResponseHelp.ResponseType,
+			text:         ResponseHelp.Text,
 		},
 	}
 
