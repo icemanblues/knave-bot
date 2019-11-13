@@ -76,33 +76,58 @@ const (
 	msgSubtractMissingTarget = "From whom do you want to take karma away?"
 	msgSubtractSelfTarget    = "Do you have something to confess? Why remove your own karma?"
 	msgSubtractCantAdd       = "Negative karma doesn't make sense. Please use positive numbers!"
-	tmplOverDailyLimit       = "Ah ah ah! The daily limit is %v and you've given/taken %v karma already. Only %v remaining"
+	msgNoKarmaForTop         = "Um.. is it possible that there are no users with positive karma :("
 )
 
 // MsgOverDailyLimit generates daily limit error message (string)
 func MsgOverDailyLimit(limit, usage, remainder int) string {
-	return fmt.Sprintf(tmplOverDailyLimit, limit, usage, remainder)
+	return fmt.Sprintf("Ah ah ah! The daily limit is %v and you've given/taken %v karma already. Only %v remaining", limit, usage, remainder)
 }
 
-// UserStatus appends the User's Karma status
-func UserStatus(userID string, k int, sb *strings.Builder) {
-	sb.WriteString(fmt.Sprintf("<@%s> has %v karma.", userID, k))
+// MsgUserStatus the User's Karma status
+func MsgUserStatus(userID string, k int) string {
+	return fmt.Sprintf("<@%s> has %v karma.", userID, k)
 }
 
-// UserDailyLimit appends the remaining daily limits
-func UserDailyLimit(usage, remaining int, sb *strings.Builder) {
-	sb.WriteString(fmt.Sprintf("You have given/taken %v karma with %v remaining today.", usage, remaining))
+// MsgUserDailyLimit the remaining daily limits
+func MsgUserDailyLimit(usage, remaining int) string {
+	return fmt.Sprintf("You have given/taken %v karma with %v remaining today.", usage, remaining)
+}
+
+// MsgUserStatusTarget lets all users know who requested karma totals
+func MsgUserStatusTarget(callee, target string) string {
+	return fmt.Sprintf("<@%s> has requested karma total for <@%s>. ", callee, target)
+}
+
+// MsgGiveKarma announces who gave how much karma to whom
+func MsgGiveKarma(callee, target string, delta int) string {
+	return fmt.Sprintf("<@%s> is giving %v karma to <@%s>. ", callee, delta, target)
+}
+
+// MsgTakeKarma announces who took how much karma from whom
+func MsgTakeKarma(callee, target string, delta int) string {
+	return fmt.Sprintf("<@%s> is taking away %v karma from <@%s>. ", callee, delta, target)
+}
+
+// MsgTopKarma table for viewing top users by karma
+func MsgTopKarma(topUsers []UserKarma) string {
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("The top %v users by karma:\n", len(topUsers)))
+	sb.WriteString("Rank\tName\tKarma\n")
+	for i, user := range topUsers {
+		sb.WriteString(fmt.Sprintf("%v\t<@%v>\t%v\n", i+1, user.User, user.Karma))
+	}
+	return sb.String()
 }
 
 // Salutation appends a Salutation (insult or compliment)
-func (p SlackProcessor) Salutation(k int, sb *strings.Builder) {
+func (p SlackProcessor) Salutation(k int) string {
 	if k > 0 {
-		sb.WriteString(p.compliment.Sentence())
-		return
+		return p.compliment.Sentence()
 	}
 	if k == 0 {
-		return
+		return ""
 	}
 
-	sb.WriteString(p.insult.Sentence())
+	return p.insult.Sentence()
 }

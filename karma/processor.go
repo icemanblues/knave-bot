@@ -1,7 +1,6 @@
 package karma
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -187,10 +186,10 @@ func (p SlackProcessor) me(team, userID string) (slack.Response, error) {
 	available := p.config.DailyLimit - usage
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	UserStatus(userID, k, msg)
+	msg.WriteString(MsgUserStatus(userID, k))
 	msg.WriteString("\n")
-	UserDailyLimit(usage, available, msg)
-	p.Salutation(k, att)
+	msg.WriteString(MsgUserDailyLimit(usage, available))
+	att.WriteString(p.Salutation(k))
 	return slack.DirectResponse(msg.String(), att.String()), nil
 }
 
@@ -211,9 +210,9 @@ func (p SlackProcessor) status(team, callee string, words []string) (slack.Respo
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> has requested karma total for <@%s>. ", callee, target))
-	UserStatus(target, k, msg)
-	p.Salutation(k, att)
+	msg.WriteString(MsgUserStatusTarget(callee, target))
+	msg.WriteString(MsgUserStatus(target, k))
+	att.WriteString(p.Salutation(k))
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
@@ -235,17 +234,11 @@ func (p SlackProcessor) top(team string, words []string) (slack.Response, error)
 	}
 
 	if len(topUsers) == 0 {
-		// no one with positive karma
-		// how do we want to message it back
-		return slack.DirectResponse("Um.. is it possible that there are no users with positive karma :(", ""), nil
+		return slack.DirectResponse(msgNoKarmaForTop, ""), nil
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("The top %v users by karma:\n", len(topUsers)))
-	msg.WriteString("Rank\tName\tKarma\n")
-	for i, user := range topUsers {
-		msg.WriteString(fmt.Sprintf("%v\t<@%v>\t%v\n", i+1, user.User, user.Karma))
-	}
+	msg.WriteString(MsgTopKarma(topUsers))
 	att.WriteString(p.compliment.Sentence())
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
@@ -298,9 +291,9 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> is giving %v karma to <@%s>. ", callee, delta, target))
-	UserStatus(target, k, msg)
-	p.Salutation(delta, att)
+	msg.WriteString(MsgGiveKarma(callee, target, delta))
+	msg.WriteString(MsgUserStatus(target, k))
+	att.WriteString(p.Salutation(delta))
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
 
@@ -353,8 +346,8 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 	}
 
 	msg, att := &strings.Builder{}, &strings.Builder{}
-	msg.WriteString(fmt.Sprintf("<@%s> is taking away %v karma from <@%s>. ", callee, delta, target))
-	UserStatus(target, k, msg)
-	p.Salutation(-delta, att)
+	msg.WriteString(MsgTakeKarma(callee, target, delta))
+	msg.WriteString(MsgUserStatus(target, k))
+	att.WriteString(p.Salutation(-delta))
 	return slack.ChannelAttachmentsResponse(msg.String(), att.String()), nil
 }
