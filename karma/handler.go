@@ -21,9 +21,8 @@ type Handler interface {
 
 // SQLiteHandler Karma Handler implementation using sqlite
 type SQLiteHandler struct {
-	proc     Processor
-	dao      DAO
-	dailyDao DailyDao
+	proc Processor
+	dao  DAO
 }
 
 // GetKarma handler method to read the current karma for an individual

@@ -7,7 +7,6 @@ import (
 
 	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
-	log "github.com/sirupsen/logrus"
 )
 
 // Abs absolute value of an int
@@ -27,14 +26,13 @@ type Processor interface {
 type SlackProcessor struct {
 	config     ProcConfig
 	dao        DAO
-	dailyDao   DailyDao
 	insult     shakespeare.Generator
 	compliment shakespeare.Generator
 }
 
 // NewProcessor factory method
-func NewProcessor(config ProcConfig, dao DAO, dailyDao DailyDao, insult, compliment shakespeare.Generator) SlackProcessor {
-	return SlackProcessor{config, dao, dailyDao, insult, compliment}
+func NewProcessor(config ProcConfig, dao DAO, insult, compliment shakespeare.Generator) SlackProcessor {
+	return SlackProcessor{config, dao, insult, compliment}
 }
 
 // Process handles Karma processing from slack API
@@ -179,7 +177,7 @@ func (p SlackProcessor) me(team, userID string) (slack.Response, error) {
 	}
 
 	// daily usage check
-	usage, err := p.dailyDao.GetDaily(team, userID, time.Now())
+	usage, err := p.dao.GetDaily(team, userID, time.Now())
 	if err != nil {
 		return slack.Response{}, err
 	}
@@ -270,7 +268,7 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 	}
 
 	// daily usage check
-	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
+	usage, err := p.dao.GetDaily(team, callee, time.Now())
 	if err != nil {
 		return slack.Response{}, err
 	}
@@ -279,14 +277,8 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
-	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
-	k, err := p.dao.UpdateKarma(team, target, delta)
+	k, err := p.dao.UpdateKarmaDaily(team, callee, target, delta, time.Now())
 	if err != nil {
-		return slack.Response{}, err
-	}
-	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
-	if err != nil {
-		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return slack.Response{}, err
 	}
 
@@ -325,7 +317,7 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 	}
 
 	// daily usage check
-	usage, err := p.dailyDao.GetDaily(team, callee, time.Now())
+	usage, err := p.dao.GetDaily(team, callee, time.Now())
 	if err != nil {
 		return slack.Response{}, err
 	}
@@ -334,14 +326,8 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
-	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
-	k, err := p.dao.UpdateKarma(team, target, -delta)
+	k, err := p.dao.UpdateKarmaDaily(team, callee, target, -delta, time.Now())
 	if err != nil {
-		return slack.Response{}, err
-	}
-	_, err = p.dailyDao.UpdateDaily(team, callee, time.Now(), delta)
-	if err != nil {
-		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return slack.Response{}, err
 	}
 

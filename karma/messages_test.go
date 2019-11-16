@@ -66,7 +66,7 @@ func TestSalutation(t *testing.T) {
 
 	for _, test := range testcases {
 		t.Run(test.name, func(t *testing.T) {
-			p := mockProcessor(HappyDao(), HappyDailyDao())
+			p := happyMockProcessor()
 			actual := p.Salutation(test.karma)
 			assert.Equal(t, test.expected, actual)
 		})
