@@ -55,7 +55,7 @@ func (m MockDAO) UpdateDaily(team, user string, date time.Time, karma int) (int,
 
 // NewMockDao constructor func for making mock dao
 func NewMockDao(usage int) MockDAO {
-		return MockDAO{
+	return MockDAO{
 		GetKarmaMock: func(team, user string) (int, error) {
 			return 5, nil
 		},

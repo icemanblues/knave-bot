@@ -192,7 +192,6 @@ func (dao SQLiteDAO) UpdateDaily(team, user string, date time.Time, karma int) (
 	return dao.GetDaily(team, user, date)
 }
 
-
 // NewDao factory method
 func NewDao(db *sql.DB) SQLiteDAO {
 	return SQLiteDAO{db}
