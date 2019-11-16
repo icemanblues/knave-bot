@@ -14,26 +14,26 @@ import (
 
 const testDB = "var/test/functional.db"
 
-func setupDB(datasource string) (karma.DAO, karma.DailyDao, error) {
+func setupDB(datasource string) (karma.DAO, error) {
 	if err := os.RemoveAll(datasource); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	db, err := karma.InitDB(datasource)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return karma.NewDao(db), karma.NewDailyDao(db), nil
+	return karma.NewDao(db), nil
 }
 
 func setup(t *testing.T) *gin.Engine {
-	dao, dailyDao, err := setupDB(testDB)
+	dao, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	insult := shakespeare.New("insult", "", nil)
 	compliment := shakespeare.New("compliment", "", nil)
-	knave, karma := initKarma(insult, compliment, karma.DefaultConfig, dao, dailyDao)
+	knave, karma := initKarma(insult, compliment, karma.DefaultConfig, dao)
 	r := initGin()
 	BindRoutes(r, knave, karma)
 	return r
@@ -136,5 +136,5 @@ func TestKarmaSlashCommand(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
-	// TODO: check that it is returning the help messsage
+	// TODO: check that it is returning the help message
 }

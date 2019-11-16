@@ -25,19 +25,19 @@ func TestGetDailyLimit(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, _, dailyDao, err := setupDB(testDB)
+	db, dao, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	// confirm its empty
 	rc := rowCountDailyUsage(t, db)
 	assert.Zero(t, rc)
 
-	usage, err := dailyDao.GetDaily("yankees", "judge", date)
+	usage, err := dao.GetDaily("yankees", "judge", date)
 	assert.Nil(t, err)
 	assert.Zero(t, usage)
 
 	// insert one row
-	kc, err := dailyDao.UpdateDaily("yankees", "judge", date, 4)
+	kc, err := dao.UpdateDaily("yankees", "judge", date, 4)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, kc)
 
@@ -45,11 +45,11 @@ func TestGetDailyLimit(t *testing.T) {
 	rc = rowCountDailyUsage(t, db)
 	assert.Equal(t, 1, rc)
 
-	usage, err = dailyDao.GetDaily("yankees", "judge", date)
+	usage, err = dao.GetDaily("yankees", "judge", date)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, usage)
 
-	noUsage, err := dailyDao.GetDaily("yankees", "judge", noUsageDate)
+	noUsage, err := dao.GetDaily("yankees", "judge", noUsageDate)
 	assert.Nil(t, err)
 	assert.Zero(t, noUsage)
 }
@@ -59,23 +59,23 @@ func TestUpdateDailyLimit(t *testing.T) {
 		t.Skip("skipping db integration test")
 	}
 
-	db, _, dailyDao, err := setupDB(testDB)
+	db, dao, err := setupDB(testDB)
 	assert.Nil(t, err)
 
 	// confirm empty
 	rc := rowCountDailyUsage(t, db)
 	assert.Zero(t, rc)
 
-	usage, err := dailyDao.GetDaily("yankees", "judge", date)
+	usage, err := dao.GetDaily("yankees", "judge", date)
 	assert.Nil(t, err)
 	assert.Zero(t, usage)
 
 	// add and confirm the insert
-	kc, err := dailyDao.UpdateDaily("yankees", "judge", date, 4)
+	kc, err := dao.UpdateDaily("yankees", "judge", date, 4)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, kc)
 
-	usage, err = dailyDao.GetDaily("yankees", "judge", date)
+	usage, err = dao.GetDaily("yankees", "judge", date)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, usage)
 
@@ -83,11 +83,11 @@ func TestUpdateDailyLimit(t *testing.T) {
 	assert.Equal(t, 1, rc)
 
 	// add and confirm the update
-	kc, err = dailyDao.UpdateDaily("yankees", "judge", date, 9)
+	kc, err = dao.UpdateDaily("yankees", "judge", date, 9)
 	assert.Nil(t, err)
 	assert.Equal(t, 13, kc)
 
-	usage, err = dailyDao.GetDaily("yankees", "judge", date)
+	usage, err = dao.GetDaily("yankees", "judge", date)
 	assert.Nil(t, err)
 	assert.Equal(t, 13, usage)
 

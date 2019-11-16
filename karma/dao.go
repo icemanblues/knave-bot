@@ -154,7 +154,7 @@ func (dao SQLiteDAO) Top(team string, n int) ([]UserKarma, error) {
 }
 
 // GetDaily return the amount of karma the team/user has gives/taken for a day
-func (dao SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, error) {
+func (dao SQLiteDAO) GetDaily(team, user string, date time.Time) (int, error) {
 	row := dao.db.QueryRow(`
 		SELECT du.usage
 		FROM   daily_usage du
@@ -174,7 +174,7 @@ func (dao SQLiteDailyDAO) GetDaily(team, user string, date time.Time) (int, erro
 }
 
 // UpdateDaily adds karma to team/user's daily usage count
-func (dao SQLiteDailyDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
+func (dao SQLiteDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
 	_, err := dao.db.Exec(`
 		INSERT INTO daily_usage
 		(team, user, daily, usage, created_at, updated_at)
