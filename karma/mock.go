@@ -9,13 +9,14 @@ import (
 
 // MockDAO a mock dao for karma whose mock functions can be monkeypatched
 type MockDAO struct {
-	GetKarmaMock    func(team, user string) (int, error)
-	UpdateKarmaMock func(team, user string, delta int) (int, error)
-	DeleteKarmaMock func(team, user string) (int, error)
-	UsageMock       func(slack.CommandData, slack.Response) error
-	TopMock         func(team string, n int) ([]UserKarma, error)
-	GetDailyMock    func(team, user string, date time.Time) (int, error)
-	UpdateDailyMock func(team, user string, date time.Time, karma int) (int, error)
+	GetKarmaMock         func(team, user string) (int, error)
+	UpdateKarmaMock      func(team, user string, delta int) (int, error)
+	DeleteKarmaMock      func(team, user string) (int, error)
+	UsageMock            func(slack.CommandData, slack.Response) error
+	TopMock              func(team string, n int) ([]UserKarma, error)
+	GetDailyMock         func(team, user string, date time.Time) (int, error)
+	UpdateDailyMock      func(team, user string, date time.Time, karma int) (int, error)
+	UpdateKarmaDailyMock func(team, callee, target string, delta int, date time.Time) (int, error)
 }
 
 // GetKarma .
@@ -53,6 +54,11 @@ func (m MockDAO) UpdateDaily(team, user string, date time.Time, karma int) (int,
 	return m.UpdateDailyMock(team, user, date, karma)
 }
 
+// UpdateKarmaDaily .
+func (m MockDAO) UpdateKarmaDaily(team, callee, target string, delta int, date time.Time) (int, error) {
+	return m.UpdateKarmaDailyMock(team, callee, target, delta, date)
+}
+
 // NewMockDao constructor func for making mock dao
 func NewMockDao(usage int) MockDAO {
 	return MockDAO{
@@ -82,6 +88,9 @@ func NewMockDao(usage int) MockDAO {
 		},
 		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
 			return karma + usage, nil
+		},
+		UpdateKarmaDailyMock: func(team, callee, target string, delta int, date time.Time) (int, error) {
+			return delta + 1, nil
 		},
 	}
 }
@@ -119,6 +128,9 @@ func SadDao() MockDAO {
 		},
 		UpdateDailyMock: func(team, user string, date time.Time, karma int) (int, error) {
 			return 0, errors.New("UpdateDailyMock")
+		},
+		UpdateKarmaDailyMock: func(team, callee, target string, delta int, date time.Time) (int, error) {
+			return 0, errors.New("UpdateKarmaDailyMock")
 		},
 	}
 }

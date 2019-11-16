@@ -7,7 +7,6 @@ import (
 
 	"github.com/icemanblues/knave-bot/shakespeare"
 	"github.com/icemanblues/knave-bot/slack"
-	log "github.com/sirupsen/logrus"
 )
 
 // Abs absolute value of an int
@@ -278,14 +277,8 @@ func (p SlackProcessor) add(team, callee string, words []string) (slack.Response
 		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
-	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
-	k, err := p.dao.UpdateKarma(team, target, delta)
+	k, err := p.dao.UpdateKarmaDaily(team, callee, target, delta, time.Now())
 	if err != nil {
-		return slack.Response{}, err
-	}
-	_, err = p.dao.UpdateDaily(team, callee, time.Now(), delta)
-	if err != nil {
-		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return slack.Response{}, err
 	}
 
@@ -333,14 +326,8 @@ func (p SlackProcessor) subtract(team, callee string, words []string) (slack.Res
 		return slack.ErrorResponse(MsgOverDailyLimit(p.config.DailyLimit, usage, available)), nil
 	}
 
-	// TODO: Might want to combine these two dao statements so that they are atomic (in one transaction)
-	k, err := p.dao.UpdateKarma(team, target, -delta)
+	k, err := p.dao.UpdateKarmaDaily(team, callee, target, -delta, time.Now())
 	if err != nil {
-		return slack.Response{}, err
-	}
-	_, err = p.dao.UpdateDaily(team, callee, time.Now(), delta)
-	if err != nil {
-		log.Errorf("Was able to update the karma but not the daily usage. utoh! %v %v %v", team, callee, err)
 		return slack.Response{}, err
 	}
 

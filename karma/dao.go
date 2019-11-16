@@ -24,6 +24,7 @@ type DAO interface {
 	Usage(slack.CommandData, slack.Response) error
 	GetDaily(team, user string, date time.Time) (int, error)
 	UpdateDaily(team, user string, date time.Time, karma int) (int, error)
+	UpdateKarmaDaily(team, callee, target string, delta int, date time.Time) (int, error)
 }
 
 // IsoDate converts a time object to 2006-01-02 format
@@ -75,7 +76,29 @@ func (dao SQLiteDAO) GetKarma(team, user string) (int, error) {
 
 // UpdateKarma adds (or removes) karma from a user in a given team (workspace)
 func (dao SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error) {
-	_, err := dao.db.Exec(`
+	tx, err := dao.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	err = dao.txUpdateKarma(tx, workspace, user, delta)
+	if err != nil {
+		log.Error("Could not Insert or Update karma.", workspace, user, delta, err)
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Error("Unable to commit the UpdateKarma transaction", workspace, user, delta, err)
+		return 0, err
+	}
+
+	return dao.GetKarma(workspace, user)
+}
+
+func (dao SQLiteDAO) txUpdateKarma(tx *sql.Tx, workspace, user string, delta int) error {
+	_, err := tx.Exec(`
 		INSERT INTO karma
 		(team, user, karma, created_at, updated_at)
 		VALUES
@@ -84,12 +107,8 @@ func (dao SQLiteDAO) UpdateKarma(workspace, user string, delta int) (int, error)
 		karma = karma + excluded.karma,
 		updated_at = excluded.updated_at;
 	`, workspace, user, delta, time.Now(), time.Now())
-	if err != nil {
-		log.Error("Could not Insert or Update karma.", workspace, user, delta, err)
-		return 0, err
-	}
 
-	return dao.GetKarma(workspace, user)
+	return err
 }
 
 // DeleteKarma resets all karma for a given user in a given team to zer0
@@ -175,7 +194,28 @@ func (dao SQLiteDAO) GetDaily(team, user string, date time.Time) (int, error) {
 
 // UpdateDaily adds karma to team/user's daily usage count
 func (dao SQLiteDAO) UpdateDaily(team, user string, date time.Time, karma int) (int, error) {
-	_, err := dao.db.Exec(`
+	tx, err := dao.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	err = dao.txUpdateDaily(tx, team, user, date, karma)
+	if err != nil {
+		log.Error("Could not Insert or Update daily usage.", team, user, date, karma, err)
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Error("Unable to commit UpdateDaily", team, user, date, karma, err)
+		return 0, err
+	}
+
+	return dao.GetDaily(team, user, date)
+}
+
+func (dao SQLiteDAO) txUpdateDaily(tx *sql.Tx, team, user string, date time.Time, karma int) error {
+	_, err := tx.Exec(`
 		INSERT INTO daily_usage
 		(team, user, daily, usage, created_at, updated_at)
 		VALUES
@@ -184,12 +224,41 @@ func (dao SQLiteDAO) UpdateDaily(team, user string, date time.Time, karma int) (
 		usage = usage + excluded.usage,
 		updated_at = excluded.updated_at;
 	`, team, user, IsoDate(date), karma, time.Now(), time.Now())
+
+	return err
+}
+
+// UpdateKarmaDaily updates the karma total and daily usage at the same time, returns new karma
+// the target receives karma
+// the callee has their daily usage incremented
+func (dao SQLiteDAO) UpdateKarmaDaily(team, callee, target string, delta int, date time.Time) (int, error) {
+	tx, err := dao.db.Begin()
 	if err != nil {
-		log.Error("Could not Insert or Update karma.", team, user, date, karma, err)
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	err = dao.txUpdateKarma(tx, team, target, delta)
+	if err != nil {
 		return 0, err
 	}
 
-	return dao.GetDaily(team, user, date)
+	err = dao.txUpdateDaily(tx, team, callee, date, Abs(delta))
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, err
+	}
+
+	k, err := dao.GetKarma(team, target)
+	if err != nil {
+		return 0, err
+	}
+
+	return k, nil
 }
 
 // NewDao factory method
